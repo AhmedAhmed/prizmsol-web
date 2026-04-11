@@ -8,13 +8,13 @@ const LogoIcon = (props: SVGProps<SVGSVGElement>) => (
         {...props}
     >
         <path
-            className="fill-pink-600"
+            className="fill-blue-600"
             fillRule="evenodd"
             d="m9 0 9 18H0L9 0Z"
             clipRule="evenodd"
         />
         <path
-            className="fill-blue-500"
+            className="fill-emerald-500"
             fillRule="evenodd"
             d="m15.218 0 9 18h-18l9-18Z"
             clipRule="evenodd"

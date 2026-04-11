@@ -96,11 +96,11 @@ export default function AccountMenu({
 
     const ProgressAvatar = ({ size = 32 }: { size?: number }) => (
         <div className="group relative flex items-center justify-center" style={{ width: size + 8, height: size + 8 }}>
-            <Avatar className="relative flex justify-center items-center bg-emerald-500 dark:bg-emerald-500 h-[32px] w-[32px]">
+            <Avatar className="relative flex justify-center items-center bg-emerald-600 dark:bg-emerald-700 h-[32px] w-[32px]">
                 {user?.imageUrl ? (
                     <AvatarImage src={user?.imageUrl} className="flex h-[32px] w-[32px]" />
                 ) : (
-                    <span className="text-md text-black dark:text-white">{getInitials(name)}</span>
+                    <span className="text-md text-white">{getInitials(name)}</span>
                 )}
             </Avatar>
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/60 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">

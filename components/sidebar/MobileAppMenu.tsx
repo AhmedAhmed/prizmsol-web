@@ -89,7 +89,7 @@ export default function MobileAppMenu({
                                             <Button
                                                 type="button"
                                                 variant="ghost"
-                                                className="flex cursor-pointer flex-1 h-[34px] lg:h-full justify-start items-center relative border border-transparent gap-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                                                className="flex cursor-pointer flex-1 h-[34px] lg:h-full justify-start items-center relative border border-transparent gap-3 px-2 hover:bg-neutral-200 dark:hover:bg-neutral-900"
                                                 onClick={onClickHandler}
                                             >
                                                 <ArrowRightFromLine size={24} />

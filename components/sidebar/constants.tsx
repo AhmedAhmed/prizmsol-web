@@ -13,7 +13,7 @@ import {
 
 export const appMenuItems = [
     {
-        name: "New Task",
+        name: "Create",
         icon: PlusIcon,
         href: "/",
         newChat: true,

@@ -163,7 +163,7 @@ input.search-focus:focus {
             var(--border-color),
             var(--border-color),
             var(--trailColor),
-            #ff0080,
+            #00bb79,
             rgb(0, 153, 255));
     animation: rotation 5s linear infinite;
 }
