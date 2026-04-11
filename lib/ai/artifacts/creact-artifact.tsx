@@ -11,13 +11,20 @@ export type ArtifactActionContext = {
 };
 
 export type ArtifactToolbarContext = {
-    appendMessage: UseChatHelpers['append'];
+    sendMessage: UseChatHelpers<any>['sendMessage'];
 };
 
 export type ArtifactToolbarItem = {
     description: string;
     icon: ReactNode;
     onClick: (context: ArtifactToolbarContext) => void;
+};
+
+export type ArtifactActionItem = {
+    icon: ReactNode;
+    description: string;
+    onClick: (context: ArtifactActionContext) => void;
+    isDisabled?: (context: ArtifactActionContext) => boolean;
 };
 
 type ArtifactConfig<T extends string, M = any> = {
@@ -28,6 +35,8 @@ type ArtifactConfig<T extends string, M = any> = {
         setArtifact: Dispatch<SetStateAction<UIArtifact>>;
         streamPart: DataStreamDelta;
     }) => void;
+    actions?: ArtifactActionItem[];
+    toolbar?: ArtifactToolbarItem[];
 };
 
 export class Artifact<T extends string, M = any> {
@@ -38,11 +47,15 @@ export class Artifact<T extends string, M = any> {
         setArtifact: Dispatch<SetStateAction<UIArtifact>>;
         streamPart: DataStreamDelta;
     }) => void;
+    readonly actions?: ArtifactActionItem[];
+    readonly toolbar?: ArtifactToolbarItem[];
 
     constructor(config: ArtifactConfig<T, M>) {
         this.kind = config.kind;
         this.description = config.description;
         this.content = config.content;
         this.onStreamPart = config.onStreamPart;
+        this.actions = config.actions;
+        this.toolbar = config.toolbar;
     }
 }

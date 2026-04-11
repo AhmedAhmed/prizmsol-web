@@ -1,20 +1,20 @@
-import { BookIcon, CodeIcon, PencilIcon } from "lucide-react";
+import { BookIcon, BriefcaseIcon, CodeIcon, PencilIcon } from "lucide-react";
 
 export const pills = [{
-    name: "Code",
-    prompt: "Develop a comprehensive study plan for learning Python, including recommended resources, time allocation for topics, and practical exercises. Ensure the plan balances theory with hands-on practice, designed specifically for someone with no prior programming experience.",
-    Icon: CodeIcon
+    name: "Get Started",
+    prompt: "Update my resume to include my latest achievements and skills.",
+    Icon: BriefcaseIcon
 }, {
-    name: "Research",
-    prompt: "Create a fully detailed essay on the life and times of Kobe Bryant. Include his childhood, teen years and his full journey to becoming a legendary athlete.",
+    name: "Teacher",
+    prompt: "Create a lesson plan for a 10 week course on Python programming. Include exercises, quizzes, and assignments.",
     Icon: BookIcon
 }, {
-    name: "Creative Writing",
-    prompt: "Create a Youtube script for reviewing the iPhone 16 Pro Max against the Samsung Galaxy s23 Ultra. Outline all features, pros vs cons and everything else.",
-    Icon: PencilIcon
+    name: "Code",
+    prompt: "Help me figure out how to write a function that takes a list of numbers and returns the sum of all the even numbers.",
+    Icon: CodeIcon
 }, {
-    name: "Resume",
-    prompt: "Create a detailed resume for that is tailored to getting a job at Google as a Fullstack software engineer. Imagine you have all the skills and experience required for the role.",
+    name: "Find work",
+    prompt: "Help me find work in my field of interest.",
     Icon: BookIcon
 }];
 

@@ -4,6 +4,7 @@ import { getCollections, getMessagesCountByUserId } from "@/lib/db/queries";
 import { AlertTriangleIcon } from "lucide-react";
 import Link from "next/link";
 import ChatPrompt from "./form";
+import Greeting from "@/components/chat/greeting";
 
 type SearchParams = {
     [key: string]: string | string[] | undefined;
@@ -34,26 +35,14 @@ export default async function NewPage({
         }
     }
 
-    const renderLogo = () => {
-        return <LogoIcon className="self-center h-10 w-10 mb-10" />;
-    }
-
-    const greeting = () => {
-        // based on time of day.
-        return "Welcome to Prizmsol";
-    }
-
     return (
         <div className="flex flex-col flex-1 w-full justify-center items-center px-10">
             <div className="flex flex-col gap-10 flex-1 w-full max-w-7xl">
                 <div className="flex flex-1 flex-col justify-center w-full">
                     <Link href="/billing" className="mb-5 flex self-center justify-self-center gap-2">
-                        <AnimatedBadge text="Introducing V1" />
+                        <AnimatedBadge text="Introducing Prizm v2" />
                     </Link>
-                    <div className="flex items-center justify-center gap-2">
-                        {renderLogo()}
-                        <h1 className="flex text-xl lg:text-3xl font-bold mb-8">{greeting()}</h1>
-                    </div>
+                    <Greeting />
                     {renderError()}
                     <ChatPrompt collections={collections} count={count} defaultPrompt={query.prompt as string} />
                 </div>

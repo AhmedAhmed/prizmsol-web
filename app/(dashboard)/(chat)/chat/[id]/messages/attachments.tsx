@@ -6,15 +6,29 @@ export default function FileAttachments({
 }: {
     toolInvocations: UIMessage["parts"];
 }) {
+    const getToolArgs = (part: any) => {
+        if (part?.type === "tool-invocation") return part.toolInvocation?.args ?? {};
+        if (typeof part?.type === "string" && part.type.startsWith("tool-")) return part.input ?? {};
+        return {};
+    };
+
+    const getToolState = (part: any) => {
+        if (part?.type === "tool-invocation") return part.toolInvocation?.state;
+        if (typeof part?.type === "string" && part.type.startsWith("tool-")) return part.state;
+        return undefined;
+    };
+
     const renderList = () => {
         return toolInvocations.map((toolInvocation) => {
-            if (toolInvocation.type == "tool-invocation") {
-                return toolInvocation.toolInvocation.args.files?.map((file: any, index: number) => {
+            const args = getToolArgs(toolInvocation as any);
+            const state = getToolState(toolInvocation as any);
+            if (args?.files?.length) {
+                return args.files.map((file: any, index: number) => {
                     return (
                         <FileAttachment
                             key={index}
                             title={file.path}
-                            isGenerating={toolInvocation.toolInvocation.state != "result"}
+                            isGenerating={state !== "result" && state !== "output-available"}
                         />
                     );
                 });

@@ -5,9 +5,11 @@ import {
     Layers,
     LifeBuoyIcon,
     LockIcon,
+    LogOutIcon,
     ScrollIcon,
     Settings,
-    SunMoonIcon
+    SunMoonIcon,
+    BarChartIcon
 } from "lucide-react";
 
 import {
@@ -25,21 +27,39 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ModeToggle } from "./ui/mode-toggle";
+import { signOut } from "next-auth/react";
+import { toast } from "sonner";
 
 export default function AccountMenu({
     user,
+    accountSnapshot,
     showName = true,
 }: {
     user: any;
+    accountSnapshot?: {
+        plan: string;
+        totalUsed: number;
+        limit: number;
+        remaining: number;
+    };
     showName?: boolean;
 }) {
-    const [plan, setPlan] = useState<string>("Free");
-    const [loading, setLoading] = useState<boolean>(true);
-    const name = user?.user_metadata?.name || "Unknown User";
+    const initialPlan = accountSnapshot?.plan ?? user?.plan ?? "free";
+    const initialLimit = accountSnapshot?.limit ?? 0;
+    const initialRemaining = accountSnapshot?.remaining ?? 0;
+    const initialUsed = accountSnapshot?.totalUsed ?? 0;
+    const initialUsagePercent = initialLimit > 0 ? Math.min(100, (initialUsed / initialLimit) * 100) : 0;
+
+    const [plan, setPlan] = useState<string>(initialPlan);
+    const [usagePercent, setUsagePercent] = useState<number | null>(initialUsagePercent);
+    const [totalCredits, setTotalCredits] = useState<number>(Math.round(initialLimit * 100));
+    const [remainingCredits, setRemainingCredits] = useState<number>(Math.max(0, Math.round(initialRemaining * 100)));
+    const [isCancelling, setIsCancelling] = useState(false);
+    const name = user?.name || "Unknown User";
     const getInitials = (name: string) => {
         const names = name ? name.split(" ") : "AA";
         if (names.length > 1) {
@@ -49,39 +69,57 @@ export default function AccountMenu({
         }
     }
 
-    const getPlan = async () => {
-        const request = await fetch(`/api/billing/subscription`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-        const { plan: defaultPlan } = await request.json();
-        setPlan(defaultPlan?.name || "Free");
-        setLoading(false);
+    const handleLogout = async () => {
+        signOut();
+        toast.success("You have been logged out successfully");
     }
 
-    useEffect(() => {
-        getPlan();
-    }, []);
+    const handleCancelPlan = async () => {
+        try {
+            setIsCancelling(true);
+            const response = await fetch("/api/stripe/subscription/cancel", { method: "POST" });
+            if (!response.ok) {
+                toast.error("Unable to cancel plan");
+                return;
+            }
+            setPlan("plan");
+            toast.success("Plan will be cancelled at end of billing period.");
+        } catch (_error) {
+            toast.error("Unable to cancel plan");
+        } finally {
+            setIsCancelling(false);
+        }
+    };
+
+    const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+    const ringPercent = usagePercent ?? 0;
+
+    const ProgressAvatar = ({ size = 32 }: { size?: number }) => (
+        <div className="group relative flex items-center justify-center" style={{ width: size + 8, height: size + 8 }}>
+            <Avatar className="relative flex justify-center items-center bg-emerald-500 dark:bg-emerald-500 h-[32px] w-[32px]">
+                {user?.imageUrl ? (
+                    <AvatarImage src={user?.imageUrl} className="flex h-[32px] w-[32px]" />
+                ) : (
+                    <span className="text-md text-black dark:text-white">{getInitials(name)}</span>
+                )}
+            </Avatar>
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/60 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+                {ringPercent.toFixed(0)}%
+            </div>
+        </div>
+    );
 
     return (
-        <div className="flex flex-1 h-full bg-transparent">
+        <div className="flex flex-1 h-full w-full bg-transparent">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <div className="flex flex-1 gap-1 justify-start items-center cursor-pointer active:opacity-80">
-                        <Button variant="ghost" className={cn("relative hover:bg-neutral-200 dark:hover:bg-neutral-900 justify-start px-2 py-1 my-1 h-auto w-full", !showName && "hover:bg-transparent dark:hover:bg-transparent")}>
+                        <Button variant="ghost" className={cn("relative hover:bg-neutral-200 dark:hover:bg-neutral-900 justify-start px-2 py-1 my-2.5 h-auto w-full", !showName && "hover:bg-transparent dark:hover:bg-transparent")}>
                             <div className="flex items-center flex-1 gap-2">
-                                <Avatar className="flex justify-center items-center bg-blue-500 dark:bg-blue-500 h-[32px] w-[32px]">
-                                    {user?.imageUrl ? (
-                                        <AvatarImage src={user?.imageUrl} className="flex h-[32px] w-[32px]" />
-                                    ) : (
-                                        <span className="text-md text-white">{getInitials(name)}</span>
-                                    )}
-                                </Avatar>
-                                {showName && <div className="flex flex-col">
-                                    <span className="text-md">{name}</span>
-                                    {loading ? (<div className="flex animate-pulse h-[20px] w-1/3 bg-neutral-300 dark:bg-neutral-800 rounded-sm"></div>) : <span className="flex text-md opacity-50">{plan}</span>}
+                                <ProgressAvatar size={32} />
+                                {showName && <div className="flex flex-col items-start">
+                                    <span className="text-md">{user?.name}</span>
+                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">{capitalize(plan)} </span>
                                 </div>}
                             </div>
                             {showName && <ChevronsUpDownIcon className="ml-2 h-4 w-4" />}
@@ -90,18 +128,46 @@ export default function AccountMenu({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[300px]">
                     <DropdownMenuLabel className="flex items-center gap-2">
-                        <Avatar className="flex bg-blue-500 dark:bg-blue-500 justify-center items-center h-[35px] w-[35px]">
-                            {user?.imageUrl ? (
-                                <AvatarImage src={user?.imageUrl} className="flex h-[35px] w-[35px]" />
-                            ) : (
-                                <span className="text-md text-white">{getInitials(name)}</span>
-                            )}
-                        </Avatar>
+                        <ProgressAvatar size={35} />
                         <div className="flex flex-col">
                             <span className="text-md">{name}</span>
                             {user?.email && <span className="flex text-md font-normal">{user.email}</span>}
+                            <span className="text-xs text-neutral-500 dark:text-neutral-400">{capitalize(plan)} Plan</span>
                         </div>
                     </DropdownMenuLabel>
+                    <div className="mx-2 rounded-xl border border-neutral-200 bg-neutral-100 p-3 dark:border-neutral-800 dark:bg-neutral-900">
+                        <div className="mb-3 flex items-center justify-between">
+                            <span className="text-sm font-semibold">Balance</span>
+                            <Link
+                                href="/pricing"
+                                className="rounded-lg bg-black px-3 py-0.5 text-sm font-medium text-white dark:bg-white dark:text-black"
+                            >
+                                Upgrade
+                            </Link>
+                        </div>
+                        <div className="space-y-1 text-sm">
+                            <div className="flex items-center justify-between">
+                                <span className="text-neutral-500 dark:text-neutral-400">Total</span>
+                                <span className="font-semibold">{totalCredits.toLocaleString()} credits</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-neutral-500 dark:text-neutral-400">Remaining</span>
+                                <span className="font-semibold">{remainingCredits.toLocaleString()}</span>
+                            </div>
+                        </div>
+                        {plan !== "free" ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="mt-3 w-full"
+                                onClick={handleCancelPlan}
+                                disabled={isCancelling}
+                            >
+                                {isCancelling ? "Cancelling..." : "Cancel plan"}
+                            </Button>
+                        ) : null}
+                    </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                         <DropdownMenuItem asChild>
@@ -111,9 +177,15 @@ export default function AccountMenu({
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                            <Link href="/billing" className="flex items-center w-full">
+                            <Link href="/pricing" className="flex items-center w-full">
                                 <CreditCardIcon className="mr-2 h-4 w-4" />
-                                <span>Billing & Usage</span>
+                                <span>Plans</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/usage" className="flex items-center w-full">
+                            <BarChartIcon className="mr-2 h-4 w-4" />
+                                <span>Usage</span>
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
@@ -163,6 +235,13 @@ export default function AccountMenu({
                             </div>
                             <ModeToggle />
                         </div>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOutIcon className="mr-2 h-4 w-4" />
+                            <span>Logout</span>
+                        </DropdownMenuItem>
                     </DropdownMenuGroup>
                 </DropdownMenuContent>
             </DropdownMenu>

@@ -1,6 +1,6 @@
 "use server";
 
-import { google } from "@ai-sdk/google";
+import { gateway } from "@ai-sdk/gateway";
 import { generateText } from "ai";
 import { image_search_prompt } from "./prompts";
 
@@ -31,7 +31,7 @@ const imageSearch = async (query: string) => {
 
 export async function generateImageQuery(message: string) {
     const { text: title } = await generateText({
-        model: google("gemini-2.0-flash"),
+        model: gateway("google/gemini-2.0-flash"),
         system: image_search_prompt,
         prompt: message,
     });

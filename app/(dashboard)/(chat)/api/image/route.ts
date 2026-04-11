@@ -1,5 +1,5 @@
 // import { saveDocument } from "@/lib/db/queries";
-import { openai } from "@ai-sdk/openai";
+import { gateway } from "@ai-sdk/gateway";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { experimental_generateImage as generateImage } from "ai";
 import { NextRequest, NextResponse } from "next/server";
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const { image } = await generateImage({
-            model: openai.image("gpt-image-1"),
+            model: gateway("openai/gpt-image-1") as any,
             prompt: prompt,
             size: "1024x1024",
             providerOptions: {

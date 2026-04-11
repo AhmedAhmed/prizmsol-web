@@ -76,7 +76,7 @@ export const codeArtifact = new Artifact({
                     </div>
                 </div>
                 <div className="flex flex-col flex-1">
-                    <div className="flex flex-col flex-1 px-10 py-5 space-y-5 bg-neutral-100 dark:bg-neutral-900">
+                    <div className="flex flex-col flex-1 bg-neutral-100 dark:bg-neutral-900">
                         <Markdown>{content}</Markdown>
                     </div>
                 </div>

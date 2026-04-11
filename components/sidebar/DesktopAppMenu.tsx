@@ -14,20 +14,32 @@ import { useRef } from "react";
 import SimpleBar from "simplebar-react";
 import Logo from "../logo";
 import LogoIcon from "../logoIcon";
-import { ModeToggle } from "../ui/mode-toggle";
 import ChatList from "./chat-list";
 import { appMenuItems, loggedOutMenuItems } from "./constants";
+import AccountMenu from "../AccountMenu";
+import { useSession } from "next-auth/react";
 
 export default function AppMenu({
     chats,
     onClickHandler,
+    initialUser,
+    initialAccountSnapshot,
 }: {
     chats: any;
     onClickHandler: any;
+    initialUser?: any;
+    initialAccountSnapshot?: {
+        plan: string;
+        totalUsed: number;
+        limit: number;
+        remaining: number;
+    };
 }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
     const isLoggedOut = false;
+    const {data: session, status} = useSession()
+    const user = session?.user ?? initialUser;
 
     const menuItems = !isLoggedOut ? appMenuItems : loggedOutMenuItems;
     const isSelected = (url: string) => {
@@ -51,7 +63,7 @@ export default function AppMenu({
                         <Button
                             variant={variant}
                             className={cn(
-                                `flex flex-1 cursor-default group/pill h-[34px] justify-start items-center relative border border-transparent hover:border-neutral-300 dark:hover:border-neutral-800/30 gap-3 px-2 py-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-700/30 overflow-hidden`,
+                                `flex flex-1 cursor-pointer group/pill h-[34px] justify-start items-center relative border border-transparent hover:border-neutral-300 dark:hover:border-neutral-800/30 gap-3 px-2 py-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-700/30 overflow-hidden`,
                                 {
                                     "bg-neutral-200 hover:bg-neutral-300/60 dark:bg-neutral-600/30 dark:hover:bg-neutral-500/30 border border-neutral-300 dark:border-neutral-700/30": selected && variant == "ghost",
                                     "bg-neutral-950 hover:bg-neutral-900 dark:bg-neutral-50 dark:hover:bg-neutral-100 border-0": newChat
@@ -68,7 +80,14 @@ export default function AppMenu({
                                     "opacity-100": selected,
                                 })} />
                                 <div className="hidden lg:flex flex-col">
-                                    <span className={newChat ? "flex text-white dark:text-black" : "flex"}>{name}</span>
+                                    <span className={cn("flex",{
+                                            "text-white dark:text-black" : newChat,
+                                            "text-neutral-800 group-hover/pill:text-neutral-900 dark:text-neutral-400 dark:group-hover/pill:text-neutral-50": !selected && !newChat,
+                                            "text-neutral-950 dark:text-neutral-50": selected && !newChat,
+                                        })}
+                                    >
+                                        {name}
+                                    </span>
                                 </div>
                             </Link>
                         </Button>
@@ -84,13 +103,13 @@ export default function AppMenu({
     };
 
     return (
-        <div className="flex flex-col mt-2.5 justify-start items-start gap-2 w-[50px] lg:w-[215px]  h-[calc(100vh-10px)] overflow-hidden z-40 bg-neutral-100 dark:bg-black">
-            <SimpleBar className="w-[50px] lg:w-[215px]">
+        <div className="flex flex-col mt-2.5 justify-start items-start gap-2 w-[50px] lg:w-[250px]  h-[calc(100vh-10px)] overflow-hidden z-40 bg-neutral-100 dark:bg-black">
+            <SimpleBar className="w-[50px] lg:w-[250px]">
                 <div className="flex flex-col justify-between items-center lg:items-start h-[calc(100vh-10px)]">
                     <div className="flex flex-col gap-2 w-full">
-                        <Link href="/" className="flex cursor-default flex-col gap-2 px-2 lg:px-5 py-2.5 relative group/pill overflow-hidden hover:opacity-100">
+                        <Link href="/" className="flex lg:self-start cursor-default flex-col gap-2 px-2 lg:px-5 py-2.5 relative group/pill overflow-hidden hover:opacity-100">
                             <div className="absolute left-0 top-0 z-10 h-[72px] w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-100/80 dark:via-neutral-950/80 to-transparent group-hover/pill:animate-[shimmer_1.5s]"></div>
-                            <Logo className="hidden lg:flex" />
+                            <Logo className="hidden lg:flex h-[22px]" />
                             <LogoIcon className="h-[18px] lg:hidden" />
                         </Link>
                         <ul className="flex flex-col gap-1.5 px-2 pb-1 w-full">
@@ -100,13 +119,13 @@ export default function AppMenu({
                                 <div
                                     className={`flex flex-1 h-[34px] justify-between relative items-center gap-3`}
                                 >
-                                    <span className="hidden lg:flex flex-1 text-md font-bold ml-2">Welcome</span>
+                                    <span className="hidden items-center lg:flex flex-1 text-md font-bold ml-2">Welcome</span>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button
                                                 type="button"
                                                 variant="ghost"
-                                                className="flex h-[34px] lg:h-full w-[34px] justify-start items-center relative border border-transparent gap-3 px-2 hover:bg-neutral-200 dark:hover:bg-neutral-900"
+                                                className="flex cursor-pointer h-[34px] lg:h-full w-[34px] justify-start items-center relative border border-transparent gap-3 px-2 hover:bg-neutral-200 dark:hover:bg-neutral-900"
                                                 onClick={onClickHandler}
                                             >
                                                 <ArrowLeftFromLine size={24} />
@@ -126,22 +145,13 @@ export default function AppMenu({
                     <div ref={containerRef} className="flex flex-1 flex-col gap-4 w-full pt-3 px-2 border-t border-neutral-200 dark:border-neutral-900 overflow-hidden overflow-y-auto">
                         <ChatList chats={chats.chats} />
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <span className="text-md font-semibold">
-                            <Link className="flex gap-1 items-center px-5" href="https://github.com/thecloakdev/prizmsol-client" target="_blank">
-                                <GithubIcon size={15} />
-                                <span>View Code</span>
-                            </Link>
-                        </span>
-                        <div className="flex gap-4 items-center w-full p-2">
-                            <ModeToggle />
-                            <Link href="https://www.instagram.com/ahmedabdihd" target="_blank">
-                                <InstagramIcon size={15} />
-                            </Link>
-                            <Link href="https://github.com/ahmedahmed" target="_blank">
-                                <GithubIcon size={15} />
-                            </Link>
-                        </div>
+                    <div className="flex flex-col w-full gap-2 px-2.5">
+                        {(status === "authenticated" || initialUser) && (
+                            <AccountMenu
+                                user={user}
+                                accountSnapshot={initialAccountSnapshot}
+                            />
+                        )}
                     </div>
                 </div>
             </SimpleBar>

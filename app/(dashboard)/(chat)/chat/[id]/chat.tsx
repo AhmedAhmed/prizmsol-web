@@ -6,9 +6,9 @@ import { useArtifact } from "@/hooks/use-artifact";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { cn } from "@/lib/utils";
 import { useChat } from "@ai-sdk/react";
-import { Message } from "ai";
+import { DefaultChatTransport, UIMessage } from "ai";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Messages from "./messages";
 import SidebarTitle from "./sidebar-title";
 
@@ -17,32 +17,39 @@ export default function Chat({
     project,
     messagesCount
 }: {
-    messages: Array<Message>;
+    messages: Array<UIMessage>;
     project: any;
     messagesCount: number;
 }) {
     const router = useRouter();
     const { setArtifact, artifact } = useArtifact();
     const [model, setModel] = useState("gemini");
+    const [input, setInput] = useState("");
     const [initialArtifact, setInitialArtifact] = useState<Array<ArtifactData>>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const { isExpanded } = useSidebar();
+    const didAutoRegenerateRef = useRef(false);
 
     const {
         messages,
-        handleSubmit,
-        input,
-        setInput,
+        sendMessage,
+        regenerate,
         status,
-        reload,
     } = useChat({
         id: project.id,
-        initialMessages: msgs as any,
+        messages: msgs,
         experimental_throttle: 150, // fixes the repeated component update issue
-        body: {
-            chatId: project.id,
-            model: model,
-        },
+        transport: new DefaultChatTransport({
+            api: '/api/chat',
+            prepareSendMessagesRequest: ({ id, messages }) => {
+                return {
+                    body: {
+                        id,
+                        messages,
+                    },
+                };
+            },
+        }),
         onFinish: () => {
             getArtifactData();
         }
@@ -77,25 +84,47 @@ export default function Chat({
 
     useEffect(() => {
         if (messages[messages.length - 1]?.role === "user" && status === "ready") {
-            reload();
             getArtifactData();
         }
     }, [messages]);
+
+    useEffect(() => {
+        if (didAutoRegenerateRef.current) return;
+        if (status !== "ready") return;
+        if (msgs.length === 0) return;
+
+        const lastInitialMessage = msgs[msgs.length - 1];
+        const hasAssistantResponse = msgs.some((message) => message.role === "assistant");
+
+        if (lastInitialMessage?.role === "user" && !hasAssistantResponse) {
+            didAutoRegenerateRef.current = true;
+            regenerate();
+        }
+    }, [status, msgs, regenerate]);
 
     const handleModelChange = (value: string) => {
         setModel(value);
     }
 
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const message = input.trim();
+        if (!message) return;
+
+        sendMessage({ text: message });
+        setInput("");
+    }
+
     return (
-        <div className={cn("flex flex-col flex-1 w-full max-w-[calc(100vw-70px)] lg:max-w-[calc(100vw-225px)]", {
-            "max-w-[calc(100vw-50px)] lg:max-w-[calc(100vw-225px)]": isExpanded,
+        <div className={cn("flex flex-col flex-1 w-full max-w-[calc(100vw-70px)] lg:max-w-[calc(100vw-265px)]", {
+            "max-w-[calc(100vw-60px)] lg:max-w-[calc(100vw-265px)]": isExpanded,
             "max-w-[calc(100vw-60px)] lg:max-w-[calc(100vw-60px)]": !isExpanded,
         })}>
             <ResizablePanelGroup
                 direction="horizontal"
                 className="group flex flex-1 overflow-hidden"
             >
-                <ResizablePanel defaultSize={20} minSize={20} className="flex flex-col min-w-[300px]">
+                <ResizablePanel id="main" order={1} defaultSize={artifact.isVisible ? 30 : 100} minSize={30} className="flex flex-col min-w-[300px]">
                     <div
                         className="flex flex-1 relative flex-col w-full overflow-hidden"
                     >

@@ -13,17 +13,10 @@ const nextConfig: NextConfig = {
         }, {
             hostname: 'avatars.githubusercontent.com'
         }, {
-            hostname: 'static-mk.prod.bcomo.com'
-        }, {
             hostname: 'img.clerk.com'
         }, {
             hostname: 'd3pr3omapn87tj.cloudfront.net'
         }],
-    },
-    eslint: {
-        // Warning: This allows production builds to successfully complete even if
-        // your project has ESLint errors.
-        ignoreDuringBuilds: true,
     },
     experimental: {
         serverActions: {

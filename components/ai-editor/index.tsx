@@ -61,7 +61,7 @@ const AIEditor = ({
                 code: {
                     HTMLAttributes: {
                         class:
-                            "rounded-md bg-stone-200 px-1.5 py-1 font-mono font-medium text-black",
+                            "rounded-md bg-neutral-200 px-1.5 py-1 font-mono font-medium text-black",
                     },
                 },
             }),

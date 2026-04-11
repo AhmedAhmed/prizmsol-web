@@ -32,7 +32,7 @@ export default async function CollectionsPage() {
         <div className="flex flex-col flex-1">
             <PaneHeader>
                 <div className="flex flex-1 items-center justify-between">
-                    <h2 className="text-sm font-bold">My Collections</h2>
+                    <h2 className="text-sm font-bold">Collections</h2>
                     <Button variant="outline" className="group text-sm  w-fit px-1.5 py-0.5 h-auto" asChild>
                         <Link href="/collections/create">
                             <PlusIcon className="h-2.5 w-2.5 opacity-50 group-hover:opacity-100 transition-all" />

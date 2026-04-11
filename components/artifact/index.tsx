@@ -1,6 +1,7 @@
 "use client";
 import { codeArtifact } from '@/artifact/code/client';
 import { textArtifact } from '@/artifact/text/client';
+import { sheetArtifact } from '@/artifact/sheet/client';
 import { useArtifact } from '@/hooks/use-artifact';
 import { Artifact as ArtifactType } from '@/lib/ai/artifacts/creact-artifact';
 import { memo } from 'react';
@@ -9,9 +10,10 @@ import { ResizablePanel } from '../ui/resizable';
 export const artifactDefinitions = [
     textArtifact,
     codeArtifact,
+    sheetArtifact,
 ];
 
-export type ArtifactKind = 'text' | 'image' | 'code';
+export type ArtifactKind = 'text' | 'image' | 'code' | 'sheet';
 
 export interface UIArtifact {
     title: string;
@@ -57,6 +59,8 @@ function PureArtifact({ artifactData, status, isLoading }: {
         <ResizablePanel
             defaultSize={70}
             maxSize={70}
+            id="artifact"
+            order={2}
             className='flex flex-col h-[calc(100vh-23px)] w-full border-l border-[0.5] border-neutral-200 dark:border-neutral-800'
         >
             <artifactDefinition.content

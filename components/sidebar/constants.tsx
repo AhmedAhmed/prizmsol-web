@@ -1,28 +1,37 @@
 import {
-    BookmarkIcon,
     CreditCardIcon,
+    FilesIcon,
+    FolderIcon,
+    HistoryIcon,
     KeyRoundIcon,
     LayersIcon,
-    MessageCircleIcon,
-    PlusIcon
+    PlusIcon,
+    BarChart3Icon,
+    UsersIcon,
+    ZapIcon
 } from "lucide-react";
 
 export const appMenuItems = [
     {
-        name: "New Chat",
+        name: "New Task",
         icon: PlusIcon,
         href: "/",
         newChat: true,
     },
     {
+        name: "History",
+        icon: HistoryIcon,
+        href: "/recents",
+    },
+    {
         name: "Collections",
-        icon: BookmarkIcon,
+        icon: FolderIcon,
         href: "/collections"
     },
     {
-        name: "Chats",
-        icon: MessageCircleIcon,
-        href: "/recents",
+        name: "Usage",
+        icon: BarChart3Icon,
+        href: "/usage",
     }
 ]
 

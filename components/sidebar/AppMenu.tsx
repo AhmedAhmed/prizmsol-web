@@ -30,6 +30,8 @@ export default function AppMenu({ user, isExpanded, chats }: { user?: any; isExp
         <DesktopAppMenu
             chats={chats}
             onClickHandler={toggleExpanded}
+            initialUser={user?.sessionUser}
+            initialAccountSnapshot={user?.accountSnapshot}
         />
     ) : (
         <MobileAppMenu

@@ -1,4 +1,4 @@
-import type { InferSelectModel } from 'drizzle-orm';
+import { desc, type InferSelectModel } from 'drizzle-orm';
 import {
     boolean,
     integer,
@@ -9,6 +9,28 @@ import {
     uuid,
     varchar
 } from 'drizzle-orm/pg-core';
+
+export const user = pgTable('users', {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    email: varchar("email", { length: 64 }).notNull(),
+    password: varchar("password", { length: 64 }),
+    plan: varchar("plan", { enum: ["free", "pro", "plus"] }).notNull().default("free"),
+    stripeCustomerId: text("stripeCustomerId"),
+    stripeSubscriptionId: text("stripeSubscriptionId"),
+    stripeProductId: text("stripeProductId"),
+    billingPeriodStart: timestamp("billingPeriodStart"),
+    billingPeriodEnd: timestamp("billingPeriodEnd"),
+    aiCreditUsedCents: integer("aiCreditUsedCents").notNull().default(0),
+    name: text("name"),
+    description: text("description"),
+    emailVerified: boolean("emailVerified").notNull().default(false),
+    image: text("image"),
+    isAnonymous: boolean("isAnonymous").notNull().default(false),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type User = InferSelectModel<typeof user>;
 
 export const chat = pgTable('chats', {
     id: uuid('id').primaryKey().notNull().defaultRandom(),
@@ -24,6 +46,7 @@ export type Chat = InferSelectModel<typeof chat>;
 
 export const message = pgTable('messages', {
     id: uuid('id').primaryKey().notNull().defaultRandom(),
+    userId: uuid('userId').references(() => user.id),
     chatId: uuid('chatId')
         .notNull()
         .references(() => chat.id),
@@ -43,7 +66,7 @@ export const Documents = pgTable('documents', {
         .references(() => chat.id),
     title: varchar('title').notNull(),
     content: varchar('content').notNull(),
-    type: varchar('type', { enum: ['text', 'image', 'code', 'speech'] }).notNull(),
+    type: varchar('type', { enum: ['text', 'image', 'code', 'speech', 'sheet'] }).notNull(),
     media: varchar('media').notNull(),
     credit_cost: integer('credit_cost').notNull().default(0),
     createdAt: timestamp('createdAt').notNull(),
@@ -76,4 +99,13 @@ export const CollectionItems = pgTable('collection_items', {
 });
 
 export type CollectionItem = InferSelectModel<typeof CollectionItems>
+
+export const aiCreditUsageEvent = pgTable('ai_credit_usage_events', {
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    userId: uuid('userId').notNull().references(() => user.id),
+    amountCents: integer('amountCents').notNull(),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+});
+
+export type AICreditUsageEvent = InferSelectModel<typeof aiCreditUsageEvent>;
 

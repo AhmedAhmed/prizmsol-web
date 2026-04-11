@@ -1,8 +1,9 @@
 import { codeDocumentHandler } from "@/artifact/code/server";
 import { textDocumentHandler } from "@/artifact/text/server";
+import { sheetDocumentHandler } from "@/artifact/sheet/server";
 import { ArtifactKind } from "@/components/artifact";
 import { saveDocument } from "@/lib/db/queries";
-import { DataStreamWriter } from "ai";
+import { UIMessageStreamWriter } from "ai";
 
 export interface SaveDocumentProps {
     id: string;
@@ -17,7 +18,7 @@ export interface CreateDocumentCallbackProps {
     chatId: string;
     prompt: string;
     title: string;
-    dataStream: DataStreamWriter;
+    dataStream: UIMessageStreamWriter;
     session: any;
 }
 
@@ -61,7 +62,8 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
  */
 export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
     textDocumentHandler,
-    codeDocumentHandler
+    codeDocumentHandler,
+    sheetDocumentHandler
 ];
 
-export const artifactKinds = ['text', 'code', 'image'] as const;
+export const artifactKinds = ['text', 'code', 'sheet'] as const;

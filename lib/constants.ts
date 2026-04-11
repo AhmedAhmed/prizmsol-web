@@ -1,3 +1,5 @@
+import { generateDummyPassword } from "./utils";
+
 export const isProductionEnvironment = process.env.NODE_ENV === 'production';
 
 export const INDUSTRIES = [
@@ -32,3 +34,9 @@ const MAX_COUNT: Array<CountType> = [{
 export const getPlanLimits = async () => {
     return 10000000;
 }
+
+export const DUMMY_PASSWORD = generateDummyPassword();
+
+export const guestRegex = /^guest-\d+$/;
+
+export const isDevelopmentEnvironment = process.env.NODE_ENV === "development";

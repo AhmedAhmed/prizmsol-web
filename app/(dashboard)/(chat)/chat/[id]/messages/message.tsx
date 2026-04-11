@@ -1,14 +1,13 @@
 import { ArtifactData } from "@/components/artifact";
+import { ChatReasoning } from "@/components/chat/chat-reasoning";
 import { Markdown } from "@/components/markdown";
-import ProxyImage from "@/components/ProxyImage";
 import SimpleTooltip from "@/components/simple-tooltip";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useArtifact } from "@/hooks/use-artifact";
 import { cn } from "@/lib/utils";
-import { Message as Msg } from "ai";
-import { isEmpty } from "lodash";
-import { CodeIcon, FileTextIcon, GlobeIcon, Loader2Icon } from "lucide-react";
+import { UIMessage as Msg } from "ai";
+import { CodeIcon, FileTextIcon, GlobeIcon, Loader2Icon, LoaderIcon, TableIcon, UserIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,6 +26,7 @@ export default function Message({
 }) {
     const { setArtifact, artifact } = useArtifact();
     const router = useRouter();
+    console.log("message: ", message);
 
     useEffect(() => {
         if (status === "ready" && message.role === "assistant") {
@@ -48,173 +48,71 @@ export default function Message({
         });
     }
 
-    const printSources = () => {
-        return message.role == "assistant" && (
-            <div className="flex flex-col flex-1 gap-4 mb-2.5 w-full">
-                <div className="flex gap-2 w-full overflow-hidden overflow-x-auto">
-                    {message.parts?.map((part, index: number) => {
-                        const { type } = part;
+    const isToolPart = (part: any) =>
+        part?.type === "tool-invocation" || (typeof part?.type === "string" && part.type.startsWith("tool-"));
 
-                        if (type == "tool-invocation" && part.toolInvocation.toolName == "webSearchTool") {
-                            const { state } = part.toolInvocation;
-                            if (state == "call") {
-                                return (
-                                    <div className="flex items-center gap-2.5 w-full" key={index}>
-                                        {[...Array(4)].map((_, ind) => (
-                                            <div className="flex items-center w-full h-[40px] rounded-md bg-neutral-200 dark:bg-neutral-800 animate-pulse" key={ind}>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )
-                            }
-
-                            if (state == "result") {
-                                const { result } = part.toolInvocation;
-                                return result.sources.map((source: any, ind: number) => (
-                                    <SimpleTooltip key={ind} text={source.title}>
-                                        <Link key={index} href={source.url} target="_blank" rel="noopener noreferrer" className="flex flex-col hover:bg-neutral-200 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-800 gap-1 p-2.5 rounded-md">
-                                            <div className="flex flex-1 gap-2 items-center">
-                                                <GlobeIcon className="h-4 w-4 text-neutral-500" />
-                                                <span className="flex-1 text-sm line-clamp-1">{source.title}</span>
-                                            </div>
-                                        </Link>
-                                    </SimpleTooltip>
-                                ));
-                            }
-                        }
-                    })}
-                </div>
-            </div>
-        );
+    const getToolName = (part: any) => {
+        if (part?.type === "tool-invocation") return part.toolInvocation?.toolName;
+        if (typeof part?.type === "string" && part.type.startsWith("tool-")) return part.type.replace("tool-", "");
+        return undefined;
     };
 
-    const renderImages = (images: Array<any>, loading: boolean) => {
+    const getToolState = (part: any) => {
+        if (part?.type === "tool-invocation") return part.toolInvocation?.state;
+        if (typeof part?.type === "string" && part.type.startsWith("tool-")) return part.state;
+        return undefined;
+    };
 
-        if (loading) {
-            return (
-                <div className='flex gap-2.5 w-full h-[150px]'>
-                    {[...Array(5)].map((_, index: number) => (
-                        <div key={index} className="flex items-center justify-center bg-neutral-300 dark:bg-neutral-700 h-[150px] w-[150px] rounded-xl animate-pulse">
-                        </div>
-                    ))}
-                </div>
-            );
-        }
+    const getToolArgs = (part: any) => {
+        if (part?.type === "tool-invocation") return part.toolInvocation?.args;
+        if (typeof part?.type === "string" && part.type.startsWith("tool-")) return part.input;
+        return undefined;
+    };
 
-
-        // get only 5 images.
-        return images && images.length > 0 && (
-            <div className='flex gap-2.5 w-full h-[150px]'>
-                {images.map((image: any, index) => (
-                    <div className="flex flex-col border border-neutral-300 dark:border-neutral-800 rounded-xl items-center relative aspect-square h-[150px] w-[150px]" key={index}>
-                        <Link href={image.url || image.thumbnail} target="_blank" className="w-full h-full">
-                            <ProxyImage
-                                key={index}
-                                src={image.url || image.thumbnail}
-                                fallbackurl={image.thumbnail}
-                                alt={image.title || `Image ${index + 1}`}
-                                fill
-                                unoptimized={true}
-                                className="object-cover rounded-xl"
-                            />
-                        </Link>
-                    </div>
-                ))}
-            </div>
-        );
-    }
-
-    const hasImages = () => {
-        let arr = message.parts?.map((part) => {
-            if (part.type === "tool-invocation" && part.toolInvocation.toolName == "webSearchTool" && part.toolInvocation.state == "result") {
-                console.log("images -> ", part.toolInvocation.result.images);
-                return !isEmpty(part.toolInvocation.result.images);
-            }
-        });
-        arr = arr?.filter(value => value !== undefined && value !== false);
-        return !isEmpty(arr);
-    }
-
-    const printSearchImages = () => {
-        return message.role == "assistant" && hasImages() && (
-            <div className="flex flex-col sticky top-0 gap-5 w-full h-[200px] bg-gradient-to-b from-neutral-50 from-85% to-transparent dark:from-[#101012] overflow-hidden overflow-x-auto pt-5">
-                <div className="flex flex-col">
-                    {message.parts?.map((part) => {
-                        if (part.type == "tool-invocation") {
-                            if (part.toolInvocation.toolName == "webSearchTool") {
-                                if (part.toolInvocation.state == "result") {
-                                    return renderImages(part.toolInvocation.result.images, false)
-                                } else {
-                                    return renderImages([], true);
-                                }
-                            }
-                        }
-                    })}
-                </div>
-            </div>
-        );
-    }
-
-    const printImage = () => {
-        return message.parts?.map((part, index: number) => {
-            if (part.type == "tool-invocation") {
-                const { state, toolName } = part.toolInvocation;
-                if (state == "result") {
-                    const { result } = part.toolInvocation;
-                    if (toolName == "imageTool") {
-                        return (
-                            <div key={index} className="flex flex-col relative w-[500px] h-[500px] rounded-lg overflow-hidden">
-                                <Image
-                                    src={result.image}
-                                    alt="Generated Image"
-                                    fill
-                                    className="object-cover"
-                                />
-                            </div>
-                        );
-                    }
-                }
-            }
-        });
-    }
-
-    const getInitials = (name: string) => {
-        const names = name ? name?.split(" ") : "AA";
-        if (names.length > 1) {
-            return names[0][0] + names[1][0];
-        } else {
-            return names[0][0];
-        }
-    }
+    const getToolResult = (part: any) => {
+        if (part?.type === "tool-invocation") return part.toolInvocation?.result;
+        if (typeof part?.type === "string" && part.type.startsWith("tool-")) return part.output;
+        return undefined;
+    };
 
     return (
         <div className={cn("flex flex-col", {
-            "bg-neutral-200 dark:bg-neutral-800/80 p-3 rounded-lg shadow-xs self-start": message.role == "user",
+            "bg-neutral-200 dark:bg-neutral-800/80 p-3 rounded-lg shadow-xs self-end": message.role == "user",
             "w-full": message.role == "assistant",
         })}>
             <div className="flex gap-3 w-full">
-                {message.role == "user" && <div className="flex items-center justify-center w-7 h-7">
-                    <Avatar className="flex justify-center items-center bg-neutral-800 dark:bg-neutral-300 h-[32px] w-[32px]">
-                        <span className="text-sm font-bold text-neutral-50 dark:text-neutral-800">AA</span>
-                    </Avatar>
-                </div>}
                 <div className="flex flex-col space-y-4 flex-wrap w-full">
-                    {printSources()}
-                    {printSearchImages()}
                     {message.parts?.map((part, index) => {
                         const { type } = part;
                         if (type == "text") {
                             return (
-                                <div key={index} className={"flex flex-col space-y-4 mt-1"}>
+                                <div key={index} className={"flex flex-col space-y-4"}>
                                     <Markdown>{part.text}</Markdown>
                                 </div>
                             );
                         }
 
-                        if (type == "tool-invocation") {
-                            const { toolName, args, state } = part.toolInvocation;
+                        if (type == "reasoning") {
+                            const isStreamingThought =
+                                status === "streaming" &&
+                                index === (message.parts?.length ?? 0) - 1;
 
-                            if (state == "call") {
+                            return (
+                                <div key={index} className={"flex flex-col space-y-4"}>
+                                    <ChatReasoning
+                                        reasoning={part.text}
+                                        isStreaming={isStreamingThought}
+                                    />
+                                </div>
+                            );
+                        }
+
+                        if (isToolPart(part)) {
+                            const toolName = getToolName(part);
+                            const args = getToolArgs(part);
+                            const state = getToolState(part);
+
+                            if (state == "call" || state == "input-available" || state == "input-streaming") {
                                 if (toolName == "createDocumentTool") {
                                     return (
                                         <div key={index} className="flex items-center gap-2.5">
@@ -229,9 +127,10 @@ export default function Message({
                                 if (toolName == "webSearchTool") {
                                     return (
                                         <div key={index} className="flex items-center gap-2.5">
-                                            <div className="flex flex-col items-center h-7 relative overflow-hidden">
+                                            <div key={index} className="flex gap-2 w-fit relative items-center py-1.5 text-sm">
                                                 <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-[#101012] to-transparent animate-[shimmer_1.5s_infinite]"></div>
-                                                <span className="flex flex-1 text-sm text-neutral-500 dark:text-neutral-400 min-h-[calc(100vh-18px)]">Gathering information...</span>
+                                                <LoaderIcon className="h-4 w-4 text-neutral-500 animate-spin" />
+                                                <span className="flex-1 tet-neutral-600 dark:text-neutral-400 text-sm line-clamp-1">Searching the web for "{args?.prompt}"</span>
                                             </div>
                                         </div>
                                     );
@@ -255,8 +154,9 @@ export default function Message({
                                 }
                             }
 
-                            if (state == "result") {
-                                const { result } = part.toolInvocation;
+                            if (state == "result" || state == "output-available") {
+                                const result = getToolResult(part);
+
                                 if (toolName == "createDocumentTool") {
                                     return isLoading ? (
                                         <div key={index} className="flex h-[36px] w-[250px] rounded-md bg-neutral-200 dark:bg-neutral-700 animate-pulse"></div>
@@ -270,16 +170,37 @@ export default function Message({
                                             <div className="mt-0.5 self-start text-sm font-semibold text-muted-foreground">
                                                 {args.kind == "code" && <CodeIcon className="h-5 w-5" />}
                                                 {args.kind == "text" && <FileTextIcon className="h-5 w-5" />}
+                                                {args.kind == "sheet" && <TableIcon className="h-5 w-5" />}
                                             </div>
                                             <div className="flex flex-1 self-start flex-col gap-1">
-                                                <span className="text-sm text-muted-foreground text-start text-balance  line-clamp-2">
+                                                <span className="text-sm text-muted-foreground text-start text-balance line-clamp-2">
                                                     {artifact.status == "streaming" ? `Creating "${args.title}"` || "Creating document" : `Created "${args.title}"` || "Created document"}
                                                 </span>
                                             </div>
                                         </Button>
                                     );
                                 }
-                                { printImage() }
+                                if (toolName == "imageTool") {
+                                    return (
+                                        <div key={index} className="flex flex-col relative w-[500px] h-[500px] rounded-lg overflow-hidden">
+                                            <Image
+                                                src={result.image}
+                                                alt="Generated Image"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
+                                    );
+                                }
+
+                                if (toolName === "webSearchTool") {
+                                    return (
+                                        <div key={index} className="flex gap-2 line-clamp-2 w-fit items-center py-1.5 text-sm">
+                                            <GlobeIcon className="h-4 w-4 text-neutral-500" />
+                                            <span className="flex-1 text-neutral-600 dark:text-neutral-400 text-sm line-clamp-1">Searched for "{result.query}"</span>
+                                        </div>
+                                    );
+                                }
                             }
                         }
                     })}

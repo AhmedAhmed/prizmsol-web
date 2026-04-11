@@ -1,6 +1,6 @@
 import { createDocumentHandler } from '@/lib/ai/artifacts/server';
 import { document_prompt } from '@/lib/ai/prompts';
-import { google } from '@ai-sdk/google';
+import { gateway } from '@ai-sdk/gateway';
 import { smoothStream, streamText } from 'ai';
 
 export const textDocumentHandler = createDocumentHandler<'text'>({
@@ -9,9 +9,7 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
         let draftContent = '';
         // stream data to artifact.
         const result = streamText({
-            model: google("gemini-2.0-flash", {
-                useSearchGrounding: true,
-            }),
+            model: gateway("google/gemini-2.0-flash"),
             system: document_prompt,
             prompt: prompt,
             experimental_transform: smoothStream({ chunking: 'word' }),
@@ -23,13 +21,13 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
             const { type } = delta;
 
             if (type === 'text-delta') {
-                const { textDelta } = delta;
+                const textDelta = delta.text;
 
                 draftContent += textDelta;
 
-                dataStream.writeData({
-                    type: 'text-delta',
-                    content: textDelta,
+                dataStream.write({
+                    type: 'data-text-delta',
+                    data: textDelta,
                 });
             }
         }

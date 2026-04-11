@@ -23,7 +23,7 @@ export default function NavLink({
     let active = path === href || (href != baseUrl && path.startsWith(href));
 
     return (
-        <Link className={active ? activeClassName : inactiveClassName} href={href} title={title}>
+        <Link className={`cursor-pointer ${active ? activeClassName : inactiveClassName}`} href={href} title={title}>
             <>{children}</>
         </Link>
     );

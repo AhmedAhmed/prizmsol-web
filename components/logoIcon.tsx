@@ -1,13 +1,29 @@
-const LogoIcon = (props: any) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={31} height={25} viewBox="0 0 31 25" {...props}>
-    <g fill="none" fillRule="evenodd">
-      <path fill="#FF0080" d="M12.5 0 25 25H0z" />
-      <path fill="#007EFF" d="M18.5 0 31 25H6z" />
-      <path
-        className="fill-black dark:fill-white"
-        d="M15.5 6 25 25H6l9.5-19Z"
-      />
-    </g>
-  </svg>
-);
+import { SVGProps } from "react";
+
+const LogoIcon = (props: SVGProps<SVGSVGElement>) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 25 18"
+        fill="none"
+        {...props}
+    >
+        <path
+            className="fill-pink-600"
+            fillRule="evenodd"
+            d="m9 0 9 18H0L9 0Z"
+            clipRule="evenodd"
+        />
+        <path
+            className="fill-blue-500"
+            fillRule="evenodd"
+            d="m15.218 0 9 18h-18l9-18Z"
+            clipRule="evenodd"
+        />
+        <path
+            className="fill-black dark:fill-white"
+            d="M18 18H6.218l5.89-11.782L18 18Z"
+        />
+    </svg>
+)
 export default LogoIcon;
+

@@ -1,7 +1,7 @@
 import { ArtifactKind } from '@/components/artifact';
 import { createDocumentHandler } from '@/lib/ai/artifacts/server';
 import { code_prompt } from '@/lib/ai/prompts';
-import { google } from '@ai-sdk/google';
+import { gateway } from '@ai-sdk/gateway';
 import { smoothStream, streamText } from 'ai';
 
 export const codeDocumentHandler = createDocumentHandler<ArtifactKind>({
@@ -10,9 +10,7 @@ export const codeDocumentHandler = createDocumentHandler<ArtifactKind>({
         let draftContent = '';
         // stream data to artifact.
         const result = streamText({
-            model: google("gemini-2.0-flash", {
-                useSearchGrounding: true,
-            }),
+            model: gateway("moonshotai/kimi-k2.5"),
             system: code_prompt,
             prompt: prompt,
             experimental_transform: smoothStream({ chunking: 'word' }),
@@ -24,13 +22,13 @@ export const codeDocumentHandler = createDocumentHandler<ArtifactKind>({
             const { type } = delta;
 
             if (type === 'text-delta') {
-                const { textDelta } = delta;
+                const textDelta = delta.text;
 
                 draftContent += textDelta;
 
-                dataStream.writeData({
-                    type: 'text-delta',
-                    content: textDelta,
+                dataStream.write({
+                    type: 'data-text-delta',
+                    data: textDelta,
                 });
             }
         }

@@ -1,8 +1,198 @@
 import 'server-only';
 
-import { and, asc, count, desc, eq, gte, inArray } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { db } from './drizzle';
-import { chat, CollectionItems, Collections, DBMessage, Documents, Likes, message } from './schema';
+import { aiCreditUsageEvent, chat, CollectionItems, Collections, DBMessage, Documents, Likes, message, user, User } from './schema';
+import { generateHashedPassword } from '../utils';
+
+export async function getUser(email: string): Promise<User[]> {
+    try {
+        return await db.select().from(user).where(eq(user.email, email));
+    } catch (_error) {
+        throw new Error("Failed to get user");
+    }
+}
+  
+export async function createUser(
+    name: string,
+    email: string,
+    password: string,
+    stripeCustomerId?: string,
+) {
+    const hashedPassword = generateHashedPassword(password);
+
+    try {
+        return await db
+            .insert(user)
+            .values({
+                name,
+                email,
+                password: hashedPassword,
+                plan: "free",
+                aiCreditUsedCents: 0,
+                stripeCustomerId,
+            })
+            .returning();
+    } catch (_error) {
+        throw new  Error("Failed to create user");
+    }
+}
+
+export async function updateUserStripeCustomerId({
+    userId,
+    stripeCustomerId,
+}: {
+    userId: string;
+    stripeCustomerId: string;
+}) {
+    try {
+        return await db
+            .update(user)
+            .set({ stripeCustomerId, updatedAt: new Date() })
+            .where(eq(user.id, userId));
+    } catch (_error) {
+        throw new Error("Failed to update user stripe customer id");
+    }
+}
+
+export async function getUserById(id: string): Promise<User | null> {
+    try {
+        const [selectedUser] = await db.select().from(user).where(eq(user.id, id));
+        return selectedUser ?? null;
+    } catch (_error) {
+        throw new Error("Failed to get user");
+    }
+}
+
+export async function getUserByStripeCustomerId(stripeCustomerId: string): Promise<User | null> {
+    try {
+        const [selectedUser] = await db
+            .select()
+            .from(user)
+            .where(eq(user.stripeCustomerId, stripeCustomerId));
+        return selectedUser ?? null;
+    } catch (_error) {
+        throw new Error("Failed to get user by stripe customer id");
+    }
+}
+
+export async function updateUserPlanAndSubscription({
+    userId,
+    plan,
+    stripeSubscriptionId,
+    stripeProductId,
+    billingPeriodStart,
+    billingPeriodEnd,
+    resetCredits,
+}: {
+    userId: string;
+    plan: "free" | "pro" | "plus";
+    stripeSubscriptionId: string | null;
+    stripeProductId: string | null;
+    billingPeriodStart: Date | null;
+    billingPeriodEnd: Date | null;
+    resetCredits?: boolean;
+}) {
+    try {
+        return await db
+            .update(user)
+            .set({
+                plan,
+                stripeSubscriptionId,
+                stripeProductId,
+                billingPeriodStart,
+                billingPeriodEnd,
+                aiCreditUsedCents: resetCredits ? 0 : undefined,
+                updatedAt: new Date(),
+            })
+            .where(eq(user.id, userId));
+    } catch (_error) {
+        throw new Error("Failed to update user subscription");
+    }
+}
+
+export async function incrementUserAiCreditUsage({
+    userId,
+    amountCents,
+}: {
+    userId: string;
+    amountCents: number;
+}) {
+    try {
+        const [selectedUser] = await db.select().from(user).where(eq(user.id, userId));
+        if (!selectedUser) return null;
+
+        const nextValue = Math.max(0, (selectedUser.aiCreditUsedCents ?? 0) + amountCents);
+        await db
+            .update(user)
+            .set({ aiCreditUsedCents: nextValue, updatedAt: new Date() })
+            .where(eq(user.id, userId));
+
+        if (amountCents > 0) {
+            await db.insert(aiCreditUsageEvent).values({
+                userId,
+                amountCents,
+                createdAt: new Date(),
+            });
+        }
+        return nextValue;
+    } catch (_error) {
+        throw new Error("Failed to increment user ai credit usage");
+    }
+}
+
+export async function getUserAiCreditUsageEvents({
+    userId,
+    from,
+    to,
+}: {
+    userId: string;
+    from: Date;
+    to: Date;
+}) {
+    try {
+        return await db
+            .select()
+            .from(aiCreditUsageEvent)
+            .where(
+                and(
+                    eq(aiCreditUsageEvent.userId, userId),
+                    gte(aiCreditUsageEvent.createdAt, from),
+                    lte(aiCreditUsageEvent.createdAt, to),
+                ),
+            )
+            .orderBy(asc(aiCreditUsageEvent.createdAt));
+    } catch (_error) {
+        throw new Error("Failed to fetch user ai credit usage events");
+    }
+}
+
+export async function getUserAiCreditUsageTotal({
+    userId,
+    from,
+    to,
+}: {
+    userId: string;
+    from: Date;
+    to: Date;
+}) {
+    try {
+        const [row] = await db
+            .select({ total: sql<number>`coalesce(sum(${aiCreditUsageEvent.amountCents}), 0)` })
+            .from(aiCreditUsageEvent)
+            .where(
+                and(
+                    eq(aiCreditUsageEvent.userId, userId),
+                    gte(aiCreditUsageEvent.createdAt, from),
+                    lte(aiCreditUsageEvent.createdAt, to),
+                ),
+            );
+
+        return Number(row?.total ?? 0);
+    } catch (_error) {
+        throw new Error("Failed to fetch user ai credit usage total");
+    }
+}
 
 export async function saveChat({
     id,
@@ -211,7 +401,7 @@ export async function saveDocument({
     chatId: string;
     content: string;
     title: string;
-    type: 'text' | 'image' | 'code' | 'speech';
+    type: 'text' | 'image' | 'code' | 'speech' | 'sheet';
     media: string;
 }) {
     try {

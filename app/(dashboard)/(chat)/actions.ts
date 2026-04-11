@@ -1,14 +1,17 @@
 'use server';
 
 import { title_prompt } from "@/lib/ai/prompts";
+import { authOptions } from "@/app/(auth)/auth";
 import { addToCollection, saveChat, saveMessages } from "@/lib/db/queries";
-import { google } from "@ai-sdk/google";
+import { gateway } from "@ai-sdk/gateway";
+
 import { generateText } from "ai";
+import { getServerSession } from "next-auth";
 import { v4 as uuid } from "uuid";
 
 export async function generateTitleFromUserMessage(message: string) {
     const { text: title } = await generateText({
-        model: google("gemini-2.0-flash-001"),
+        model: gateway("google/gemini-2.5-flash"),
         system: title_prompt,
         prompt: message,
     });
@@ -17,6 +20,11 @@ export async function generateTitleFromUserMessage(message: string) {
 }
 
 export async function submitMessage(formData: FormData) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+        return { error: "Unauthorized" };
+    }
+
     const content = formData.get("prompt") as string;
     const collection = formData.get("collection") as string;
     const id = uuid();
@@ -38,6 +46,7 @@ export async function submitMessage(formData: FormData) {
     const message = await saveMessages({
         messages: [
             {
+                userId: session.user.id,
                 chatId: id,
                 id: mid,
                 content,

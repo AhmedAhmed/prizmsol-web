@@ -1,8 +1,7 @@
 import { ArtifactData } from "@/components/artifact";
-import LogoIcon from "@/components/logoIcon";
 import { cn } from "@/lib/utils";
-import { Message as Msg } from "ai";
-import { memo, useRef } from "react";
+import { UIMessage } from "ai";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Message from "./message";
 
 function PureMessages({
@@ -13,17 +12,61 @@ function PureMessages({
     isLoading,
 }: {
     artifactData: Array<ArtifactData>;
-    messages: Array<Msg>;
+    messages: Array<UIMessage>;
     status: "streaming" | "ready" | "error" | "submitted";
     isToolbarOpen: boolean;
     isLoading: boolean;
 }) {
-    const chatContainerRef = useRef<HTMLDivElement>(null)
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+    const isAtBottomRef = useRef(true);
+
+    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+        if (!chatContainerRef.current) return;
+        chatContainerRef.current.scrollTo({
+            top: chatContainerRef.current.scrollHeight,
+            behavior,
+        });
+    }, []);
+
+    const handleScroll = useCallback(() => {
+        if (!chatContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+        isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 80;
+    }, []);
+
+    // Jump to bottom instantly on first load
+    useEffect(() => {
+        scrollToBottom("instant");
+    }, []);
+
+    // Scroll to bottom on new messages if user is at bottom
+    useEffect(() => {
+        if (isAtBottomRef.current) {
+            scrollToBottom("smooth");
+        }
+    }, [messages]);
+
+    // During streaming, use MutationObserver to keep scrolling as content grows
+    useEffect(() => {
+        if (status !== "streaming") return;
+        const el = chatContainerRef.current;
+        if (!el) return;
+
+        const observer = new MutationObserver(() => {
+            if (isAtBottomRef.current) {
+                scrollToBottom("instant");
+            }
+        });
+
+        observer.observe(el, { childList: true, subtree: true, characterData: true });
+        return () => observer.disconnect();
+    }, [status, scrollToBottom]);
 
     return (
         <>
             <div
                 ref={chatContainerRef}
+                onScroll={handleScroll}
                 className={cn(
                     "flex flex-col justify-start items-center mx-auto px-5 w-full h-full overflow-hidden overflow-y-auto",
                     {
@@ -32,12 +75,10 @@ function PureMessages({
                     }
                 )}
             >
-                <div
-                    className="flex flex-col relative mx-auto gap-4 mt-5 w-full max-w-3xl h-full"
-                >
+                <div className="flex flex-col relative mx-auto gap-10 mt-5 w-full max-w-3xl h-full">
                     {messages.map((message, index) => (
                         <Message
-                            key={index}
+                            key={message.id ?? index}
                             artifactData={artifactData}
                             message={message}
                             isLoading={isLoading}
@@ -45,36 +86,20 @@ function PureMessages({
                         />
                     ))}
                     {status === "submitted" && messages.length > 0 && messages[messages.length - 1].role === "user" && <ThinkingMessages />}
+                    <div className="flex flex-1 min-h-2.5" />
                 </div>
             </div>
         </>
     );
 }
 
-function ThinkingMessages() {
+export function ThinkingMessages() {
     return (
-        <div className="flex gap-3">
-            <div className="flex items-center justify-center w-7 h-7 ml-1">
-                <LogoIcon className="w-5 h-5" />
-            </div>
-            <div className="flex flex-col h-7 relative mt-1.5 overflow-hidden">
-                <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-[#101012] to-transparent animate-[shimmer_1.5s_infinite]"></div>
-                <span className="text-sm text-neutral-500 dark:text-neutral-400 min-h-[calc(100vh-18px)]">Prizm is thinking...</span>
-            </div>
+        <div className="flex gap-3 flex-col h-7 relative mt-1.5 overflow-hidden">
+            <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-[#101012] to-transparent animate-[shimmer_1.5s_infinite]"></div>
+            <span className="text-sm text-neutral-500 dark:text-neutral-400 min-h-[calc(100vh-18px)]">Thinking...</span>
         </div>
     );
 }
 
-
-const Messages = memo(PureMessages, (prevProps, nextProps) => {
-    // Prevent re-rendering if the messages and artifactData are the same
-    return (
-        prevProps.messages === nextProps.messages &&
-        prevProps.artifactData === nextProps.artifactData &&
-        prevProps.status === nextProps.status &&
-        prevProps.isToolbarOpen === nextProps.isToolbarOpen &&
-        prevProps.isLoading === nextProps.isLoading
-    );
-});
-
-export default Messages;
+export default PureMessages;

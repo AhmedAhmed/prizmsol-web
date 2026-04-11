@@ -73,7 +73,7 @@ export default function CodeTag({ node, inline, className, ...props }) {
             customStyle={{
                 background: '#020618 !important',
             }}
-            className="min-h-52 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-md"
+            className="min-h-52 dark:bg-neutral-950 !m-0"
             showLineNumbers={true}
             wrapLines={hasMeta}
             useInlineStyles={true}
@@ -82,7 +82,7 @@ export default function CodeTag({ node, inline, className, ...props }) {
             {props.children}
         </SyntaxHighlighter>
     ) : (
-        <code className={cn("h-fit", className)} {...props} />
+        <code className={cn("h-fit break-all", className)} {...props} />
     )
 }
 

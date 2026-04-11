@@ -1,46 +1,41 @@
-import { google } from "@ai-sdk/google";
-import { tool as createTool, DataStreamWriter, generateText } from "ai";
+import { gateway } from "@ai-sdk/gateway";
+import { tool as createTool, generateText, UIMessageStreamWriter } from "ai";
 import { v4 as uuid } from 'uuid';
 import { z } from "zod";
 import { documentHandlersByArtifactKind } from "./artifacts/server";
 import { websearch_prompt } from "./prompts";
 
 export const createDocumentTool = ({ dataStream, chatId }: {
-    dataStream: DataStreamWriter;
+    dataStream: UIMessageStreamWriter;
     chatId: string;
 }) => createTool({
-    description: "Creates a document based on a prompt",
-    parameters: z.object({
-        kind: z.string().describe("The kind of document to create. Options: text, code, images"),
+    description: "Create an artifact. You MUST specify kind: use 'code' for any programming/algorithm request (creates a script), 'text' for essays/writing (creates a document), 'sheet' for spreadsheets/data.",
+    inputSchema: z.object({
+        kind: z.string().describe("The kind of document to create. Options: text, code, sheet"),
         title: z.string().describe("The title of the document. Include an emoji at the beginning. Maximum 25 characters"),
         prompt: z.string().describe("The precise prompt to use for generating a document"),
-        imageQuery: z.string().describe("The query to use for searching an image, if applicable"),
-        sources: z.array(z.object({
-            title: z.string().describe("The title of the source"),
-            url: z.string().describe("The url of the source"),
-        })).optional().describe("The sources uses in generating the document"),
     }),
-    execute: async ({ prompt, kind, title, imageQuery }) => {
+    execute: async ({ prompt, kind, title }) => {
         const id = uuid();
 
-        dataStream.writeData({
-            type: 'title',
-            content: title
+        dataStream.write({
+            type: 'data-title',
+            data: title,
         });
 
-        dataStream.writeData({
-            type: 'prompt',
-            content: prompt
+        dataStream.write({
+            type: 'data-prompt',
+            data: prompt,
         });
 
-        dataStream.writeData({
-            type: 'kind',
-            content: kind
+        dataStream.write({
+            type: 'data-kind',
+            data: kind,
         });
 
-        dataStream.writeData({
-            type: 'clear',
-            content: ''
+        dataStream.write({
+            type: 'data-clear',
+            data: '',
         });
 
         // stream data to artifact.
@@ -63,9 +58,9 @@ export const createDocumentTool = ({ dataStream, chatId }: {
         });
 
         // end
-        dataStream.writeData({
-            type: 'finish',
-            content: ''
+        dataStream.write({
+            type: 'data-finish',
+            data: '',
         });
 
 
@@ -81,10 +76,10 @@ export const createDocumentTool = ({ dataStream, chatId }: {
 
 export const imageTool = createTool({
     description: "Create an image based on the prompt",
-    parameters: z.object({
+    inputSchema: z.object({
         prompt: z.string().describe("The prompt to use for generating an image"),
     }),
-    execute: async (params) => {
+    execute: async (params: { prompt: string }) => {
         const url = process.env.NEXT_PUBLIC_URL as string;
         const imageResp = await fetch(`${url}/api/image`, {
             method: "POST",
@@ -113,14 +108,12 @@ export const imageTool = createTool({
 
 export const webSearchTool = createTool({
     description: "Search the web for more information. This tool will call other functions that will include the research findings.",
-    parameters: z.object({
+    inputSchema: z.object({
         prompt: z.string().describe("The optimized prompt to use for generating a web search that will yield the best thorough results")
     }),
-    execute: async (params) => {
+    execute: async (params: { prompt: string }) => {
         const { text, sources } = await generateText({
-            model: google("gemini-2.0-flash-001", {
-                useSearchGrounding: true,
-            }),
+            model: gateway("google/gemini-2.0-flash"),
             system: websearch_prompt,
             prompt: params.prompt,
         });

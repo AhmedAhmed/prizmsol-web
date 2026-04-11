@@ -44,7 +44,7 @@ export default function MobileAppMenu({
                         <Button
                             variant={variant}
                             className={cn(
-                                `flex flex-1 justify-center items-center relative border border-transparent h-[34px] gap-3 px-2 bg-neutral-100 dark:bg-neutral-950 hover:bg-neutral-200 dark:hover:bg-neutral-700/20 dark:hover:border-neutral-800/30`,
+                                `flex flex-1 cursor-pointer justify-center items-center relative border border-transparent h-[34px] gap-3 px-2 bg-neutral-100 dark:bg-neutral-950 hover:bg-neutral-200 dark:hover:bg-neutral-700/20 dark:hover:border-neutral-800/30`,
                                 {
                                     "bg-neutral-200 hover:bg-neutral-200 dark:bg-neutral-800/30 dark:hover:bg-neutral-700/30 border-neutral-300 dark:border-neutral-800/30": selected && variant == "ghost",
                                     "bg-neutral-950 hover:bg-neutral-800 text-neutral-50 hover:text-neutral-50 dark:bg-white dark:hover:bg-neutral-200 dark:text-neutral-950 dark:hover:text-neutral-950 border-0": newChat,
@@ -89,7 +89,7 @@ export default function MobileAppMenu({
                                             <Button
                                                 type="button"
                                                 variant="ghost"
-                                                className="flex flex-1 h-[34px] lg:h-full justify-start items-center relative border border-transparent gap-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+                                                className="flex cursor-pointer flex-1 h-[34px] lg:h-full justify-start items-center relative border border-transparent gap-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-900"
                                                 onClick={onClickHandler}
                                             >
                                                 <ArrowRightFromLine size={24} />

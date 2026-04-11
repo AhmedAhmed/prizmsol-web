@@ -21,7 +21,7 @@ export default function PromptSubmit({ disabled, streaming = false }: { disabled
         <Button
             type="submit"
             size="icon"
-            className="bg-blue-500 hover:bg-blue-400 dark:bg-blue-500 dark:hover:bg-blue-600 text-white dark:text-white h-8 w-8"
+            className="rounded-xl bg-blue-500 hover:bg-blue-400 dark:bg-blue-500 dark:hover:bg-blue-600 text-white dark:text-white h-8 w-8"
             disabled={status?.pending || disabled}
         >
             {renderIcon()}

@@ -22,7 +22,7 @@ export default function ChatList({
 
         return (
             <div className="flex flex-col flex-1 gap-3">
-                <span className="hidden lg:flex text-sm text-neutral-500">Recent Chats</span>
+                <span className="hidden lg:flex text-sm text-neutral-500">All Tasks</span>
                 <div className="flex flex-col items-center w-full max-w-3xl mx-auto">
                     <ul className="flex flex-col gap-2.5 w-full">
                         {chats.map((item, index: number) => (
