@@ -96,7 +96,7 @@ function PureMessages({
 export function ThinkingMessages() {
     return (
         <div className="flex gap-3 flex-col h-7 relative mt-1.5 overflow-hidden">
-            <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-[#101012] to-transparent animate-[shimmer_1.5s_infinite]"></div>
+            <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-neutral-950 to-transparent animate-[shimmer_1.5s_infinite]"></div>
             <span className="text-sm text-neutral-500 dark:text-neutral-400 min-h-[calc(100vh-18px)]">Thinking...</span>
         </div>
     );

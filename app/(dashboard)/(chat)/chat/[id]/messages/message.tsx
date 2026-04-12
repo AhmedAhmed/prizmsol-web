@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useArtifact } from "@/hooks/use-artifact";
 import { cn } from "@/lib/utils";
 import { UIMessage as Msg } from "ai";
-import { CodeIcon, FileTextIcon, GlobeIcon, Loader2Icon, LoaderIcon, TableIcon, UserIcon } from "lucide-react";
+import { CodeIcon, FileTextIcon, GlobeIcon, Loader2Icon, LoaderIcon, TableIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -93,6 +93,10 @@ export default function Message({
                                 status === "streaming" &&
                                 index === (message.parts?.length ?? 0) - 1;
 
+                            if (!isStreamingThought) {
+
+                            }
+
                             return (
                                 <div key={index} className={"flex flex-col space-y-4"}>
                                     <ChatReasoning
@@ -113,7 +117,7 @@ export default function Message({
                                     return (
                                         <div key={index} className="flex items-center gap-2.5">
                                             <div className="flex flex-col items-center h-7 relative overflow-hidden">
-                                                <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-[#101012] to-transparent animate-[shimmer_1.5s_infinite]"></div>
+                                                <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-neutral-950 to-transparent animate-[shimmer_1.5s_infinite]"></div>
                                                 <span className="flex flex-1 text-sm text-neutral-500 dark:text-neutral-400 min-h-[calc(100vh-18px)]">Creating Document...</span>
                                             </div>
                                         </div>
@@ -124,7 +128,7 @@ export default function Message({
                                     return (
                                         <div key={index} className="flex items-center gap-2.5">
                                             <div key={index} className="flex gap-2 w-fit relative items-center py-1.5 text-sm">
-                                                <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-[#101012] to-transparent animate-[shimmer_1.5s_infinite]"></div>
+                                                <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-neutral-950 to-transparent animate-[shimmer_1.5s_infinite]"></div>
                                                 <LoaderIcon className="h-4 w-4 text-neutral-500 animate-spin" />
                                                 <span className="flex-1 tet-neutral-600 dark:text-neutral-400 text-sm line-clamp-1">Searching the web for "{args?.prompt}"</span>
                                             </div>
@@ -140,7 +144,7 @@ export default function Message({
                                             </div>
                                             <div className="flex flex-col">
                                                 <div className="flex flex-col h-7 relative mt-1 overflow-hidden">
-                                                    <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-[#101012] to-transparent animate-[shimmer_1.5s_infinite]"></div>
+                                                    <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-neutral-950 to-transparent animate-[shimmer_1.5s_infinite]"></div>
                                                     <span className="text-sm text-neutral-500 dark:text-neutral-400 min-h-[calc(100vh-18px)]">Generating Image...</span>
                                                 </div>
                                                 <div className="animate-pulse bg-neutral-200 dark:bg-neutral-800 w-[500px] h-[500px] rounded-lg p-2.5 mt-2"></div>

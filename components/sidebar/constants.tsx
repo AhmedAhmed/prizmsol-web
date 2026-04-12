@@ -10,7 +10,7 @@ import {
 
 export const appMenuItems = [
     {
-        name: "Create",
+        name: "Assistant",
         icon: PlusIcon,
         href: "/",
         newChat: true,

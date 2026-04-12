@@ -42,7 +42,7 @@ export function ChatReasoning({
           )}
         />
         {isStreaming ? (
-          <ThinkingMessages /> 
+          <ThinkingMessages />
         ) : (
           <span>Thought for {duration}</span>
         )}

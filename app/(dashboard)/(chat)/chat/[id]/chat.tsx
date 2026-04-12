@@ -124,7 +124,7 @@ export default function Chat({
                 direction="horizontal"
                 className="group flex flex-1 overflow-hidden"
             >
-                <ResizablePanel id="main" order={1} defaultSize={artifact.isVisible ? 30 : 100} minSize={30} className="flex flex-col min-w-[300px]">
+                <ResizablePanel id="main" order={1} defaultSize={artifact.isVisible ? 40 : 100} minSize={40} className="flex flex-col min-w-[300px]">
                     <div
                         className="flex flex-1 relative flex-col w-full overflow-hidden"
                     >

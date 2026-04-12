@@ -108,7 +108,7 @@ export default function AppMenu({
                 <div className="flex flex-col justify-between items-center lg:items-start h-[calc(100vh-10px)]">
                     <div className="flex flex-col gap-2 w-full">
                         <Link href="/" className="flex lg:self-start cursor-default flex-col gap-2 px-2 lg:px-5 py-2.5 relative group/pill overflow-hidden hover:opacity-100">
-                            <div className="absolute left-0 top-0 z-10 h-[72px] w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-100/80 dark:via-neutral-950/80 to-transparent group-hover/pill:animate-[shimmer_1.5s]"></div>
+                            <div className="absolute left-0 top-0 z-10 h-[72px] w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-100/80 dark:via-black to-transparent group-hover/pill:animate-[shimmer_1.5s]"></div>
                             <Logo className="hidden lg:flex h-[22px]" />
                             <LogoIcon className="h-[18px] lg:hidden" />
                         </Link>
@@ -141,9 +141,6 @@ export default function AppMenu({
                             </li>
                             {menuItems.map(renderItem)}
                         </ul>
-                    </div>
-                    <div ref={containerRef} className="flex flex-1 flex-col gap-4 w-full pt-3 px-2 border-t border-neutral-200 dark:border-neutral-900 overflow-hidden overflow-y-auto">
-                        <ChatList chats={chats.chats} />
                     </div>
                     <div className="flex flex-col w-full gap-2 px-2.5">
                         {(status === "authenticated" || initialUser) && (
