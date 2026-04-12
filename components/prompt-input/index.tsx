@@ -6,7 +6,17 @@ import { Button } from "@/components/ui/button"
 import { getPlanLimits } from "@/lib/constants"
 import { Collection } from "@/lib/db/schema"
 import { isEmpty } from "lodash"
-import { MicIcon, PaperclipIcon, FileTextIcon, XIcon } from "lucide-react"
+import {
+    MicIcon,
+    PaperclipIcon,
+    FileTextIcon,
+    XIcon,
+    FileIcon,
+    ImageIcon,
+    FileSpreadsheetIcon,
+    FileCodeIcon,
+    GlobeIcon,
+} from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
@@ -17,7 +27,66 @@ import PromptCollection from "./prompt-collection"
 import PromptSubmit from "./prompt-submit"
 import PromptTextarea from "./prompt-textarea"
 
-// ─── Waveform icon (animated bars shown while recording) ───────────────────
+// ─── File type helpers ────────────────────────────────────────────────────
+function getFileIcon(file: File) {
+    const mime = file.type
+    const name = file.name.toLowerCase()
+    if (mime.startsWith("image/")) return { Icon: ImageIcon, color: "text-violet-500", bg: "bg-violet-50 dark:bg-violet-950" }
+    if (mime === "application/pdf" || name.endsWith(".pdf"))
+        return { Icon: FileTextIcon, color: "text-red-500", bg: "bg-red-50 dark:bg-red-950" }
+    if (mime.includes("spreadsheet") || name.endsWith(".xlsx") || name.endsWith(".csv"))
+        return { Icon: FileSpreadsheetIcon, color: "text-green-600", bg: "bg-green-50 dark:bg-green-950" }
+    if (mime.includes("javascript") || mime.includes("typescript") || name.match(/\.(ts|tsx|js|jsx|py|rb|go|rs)$/))
+        return { Icon: FileCodeIcon, color: "text-sky-500", bg: "bg-sky-50 dark:bg-sky-950" }
+    return { Icon: FileIcon, color: "text-neutral-500", bg: "bg-neutral-100 dark:bg-neutral-800" }
+}
+
+function formatFileSize(bytes: number) {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+// ─── File attachment chip ─────────────────────────────────────────────────
+interface AttachedFile {
+    id: string
+    file: File
+}
+
+function FileChip({ attached, onRemove }: { attached: AttachedFile; onRemove: (id: string) => void }) {
+    const { Icon, color, bg } = getFileIcon(attached.file)
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 4 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="group flex items-center gap-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2.5 py-1.5 max-w-[200px] shadow-sm"
+        >
+            <div className={`flex-shrink-0 w-7 h-7 rounded-md ${bg} flex items-center justify-center`}>
+                <Icon className={`w-3.5 h-3.5 ${color}`} />
+            </div>
+            <div className="overflow-hidden flex-1 min-w-0">
+                <p className="text-xs font-medium text-neutral-800 dark:text-neutral-100 truncate leading-tight">
+                    {attached.file.name}
+                </p>
+                <p className="text-[11px] text-neutral-400 dark:text-neutral-500 truncate leading-tight">
+                    {formatFileSize(attached.file.size)}
+                </p>
+            </div>
+            <button
+                type="button"
+                onClick={() => onRemove(attached.id)}
+                className="flex-shrink-0 w-4 h-4 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                aria-label="Remove file"
+            >
+                <XIcon className="w-2.5 h-2.5 text-neutral-500 dark:text-neutral-400" />
+            </button>
+        </motion.div>
+    )
+}
+
+// ─── Waveform icon (animated bars shown while recording) ──────────────────
 function WaveformIcon() {
     const bars = [
         { delay: "0s",    dur: "0.70s", minH: 6,  maxH: 20 },
@@ -49,7 +118,6 @@ interface PastedChip {
     fullText: string
 }
 
-// Only intercept pastes longer than this many characters
 const PASTE_THRESHOLD = 200
 
 function PastedTextChip({ chip, onRemove }: { chip: PastedChip; onRemove: (id: string) => void }) {
@@ -59,13 +127,11 @@ function PastedTextChip({ chip, onRemove }: { chip: PastedChip; onRemove: (id: s
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 4 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="flex items-center gap-2 max-w-[260px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-2.5 py-1.5"
+            className="group flex items-center gap-2 max-w-[260px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-2.5 py-1.5"
         >
-            {/* doc icon */}
             <div className="flex-shrink-0 w-7 h-7 rounded-md bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
                 <FileTextIcon className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
             </div>
-            {/* labels */}
             <div className="overflow-hidden flex-1 min-w-0">
                 <p className="text-xs font-medium text-neutral-700 dark:text-neutral-200 truncate leading-tight">
                     Pasted text
@@ -74,7 +140,6 @@ function PastedTextChip({ chip, onRemove }: { chip: PastedChip; onRemove: (id: s
                     {chip.preview}
                 </p>
             </div>
-            {/* remove button */}
             <button
                 type="button"
                 onClick={() => onRemove(chip.id)}
@@ -83,6 +148,22 @@ function PastedTextChip({ chip, onRemove }: { chip: PastedChip; onRemove: (id: s
             >
                 <XIcon className="w-2.5 h-2.5 text-neutral-500 dark:text-neutral-400" />
             </button>
+        </motion.div>
+    )
+}
+
+// ─── Drag overlay ──────────────────────────────────────────────────────────
+function DragOverlay() {
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
+            className="absolute inset-0 z-20 rounded-2xl border-2 border-dashed border-neutral-400 dark:border-neutral-500 bg-neutral-50/90 dark:bg-neutral-900/90 flex flex-col items-center justify-center gap-2 pointer-events-none"
+        >
+            <PaperclipIcon className="w-6 h-6 text-neutral-400 dark:text-neutral-500" />
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Drop files to attach</p>
         </motion.div>
     )
 }
@@ -123,13 +204,17 @@ export default function PromptInput({
     const [prompt, setPrompt] = useState(defaultValue ?? "")
     const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false)
     const [emptyDialog, setEmptyDialog] = useState(false)
-    const [file, setFile] = useState<File | null>(null)
-    const [isRecording, setIsRecording] = useState(false)
+
+    // ── file state (replaces single `file`) ──
+    const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
+
     const [pastedChips, setPastedChips] = useState<PastedChip[]>([])
+    const [isDragging, setIsDragging] = useState(false)
+    const dragCounter = useRef(0)
+
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    // ── height auto-grow ────────────────────────────────────────────────────
     const adjustHeight = useCallback(() => {
         const textarea = textareaRef.current
         if (textarea) {
@@ -140,11 +225,52 @@ export default function PromptInput({
 
     useEffect(() => { adjustHeight() }, [adjustHeight, prompt])
 
-    // ── keyboard submit ────────────────────────────────────────────────────
+    // ── drag-and-drop handlers ───────────────────────────────────────────
+    const addFiles = (files: FileList | File[]) => {
+        const newEntries: AttachedFile[] = Array.from(files).map(file => ({
+            id: crypto.randomUUID(),
+            file,
+        }))
+        setAttachedFiles(prev => [...prev, ...newEntries])
+    }
+
+    const handleDragEnter = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        dragCounter.current += 1
+        if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+            setIsDragging(true)
+        }
+    }
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        dragCounter.current -= 1
+        if (dragCounter.current === 0) setIsDragging(false)
+    }
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragging(false)
+        dragCounter.current = 0
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            addFiles(e.dataTransfer.files)
+            e.dataTransfer.clearData()
+        }
+    }
+
+    // ── input/form handlers ──────────────────────────────────────────────
     const enterToSend = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault()
-            if (prompt.trim() === "" && pastedChips.length === 0) {
+            if (prompt.trim() === "" && pastedChips.length === 0 && attachedFiles.length === 0) {
                 setEmptyDialog(true)
                 return
             }
@@ -156,63 +282,60 @@ export default function PromptInput({
         }
     }
 
-    // ── paste handler ──────────────────────────────────────────────────────
     const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
         const pasted = e.clipboardData.getData("text/plain")
         if (!pasted || pasted.length < PASTE_THRESHOLD) return
-
-        // Prevent raw text from landing in the textarea
         e.preventDefault()
-
         const trimmed = pasted.trim()
         const previewRaw = trimmed.slice(0, 60).replace(/\s+/g, " ").trim()
         const preview = previewRaw.length < trimmed.length ? `${previewRaw}…` : previewRaw
-
-        setPastedChips(prev => [
-            ...prev,
-            { id: crypto.randomUUID(), preview, fullText: pasted },
-        ])
+        setPastedChips(prev => [...prev, { id: crypto.randomUUID(), preview, fullText: pasted }])
     }
 
-    const removePastedChip = (id: string) =>
-        setPastedChips(prev => prev.filter(c => c.id !== id))
+    const removePastedChip = (id: string) => setPastedChips(prev => prev.filter(c => c.id !== id))
+    const removeFileChip = (id: string) => setAttachedFiles(prev => prev.filter(f => f.id !== id))
 
-    // ── file upload ────────────────────────────────────────────────────────
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const f = e.target.files?.[0]
-        if (f) setFile(f)
+        if (e.target.files && e.target.files.length > 0) {
+            addFiles(e.target.files)
+            // Reset input so the same file can be re-attached if removed
+            e.target.value = ""
+        }
     }
 
     const triggerFileUpload = () => fileInputRef.current?.click()
 
-
-    // ── plan check ─────────────────────────────────────────────────────────
     const canSend = async () => {
         const count = await getPlanLimits()
         return messagesCount >= count
     }
 
-    // ── merge pasted chips into the prompt payload ─────────────────────────
     const buildMergedPrompt = () => {
         const chipTexts = pastedChips.map(c => c.fullText).join("\n\n")
         return chipTexts ? `${chipTexts}\n\n${prompt}`.trim() : prompt
     }
 
-    // ── form submission ────────────────────────────────────────────────────
     const handleAction = async (formData: FormData) => {
         if (await canSend()) { setUpgradeDialogOpen(true); return }
         formData.set("prompt", buildMergedPrompt())
+        // Append all attached files
+        attachedFiles.forEach(({ file }) => formData.append("files", file))
         if (action) await action(formData)
-        if (clearOnSubmit) setPastedChips([])
+        if (clearOnSubmit) {
+            setPastedChips([])
+            setAttachedFiles([])
+        }
     }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         if (await canSend()) { setUpgradeDialogOpen(true); return }
         if (onSubmit) onSubmit(e)
-        if (clearOnSubmit) setPastedChips([])
+        if (clearOnSubmit) {
+            setPastedChips([])
+            setAttachedFiles([])
+        }
     }
 
-    // ── text change ────────────────────────────────────────────────────────
     const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         handleInputChange?.(e.target.value)
         setPrompt(e.target.value)
@@ -220,7 +343,8 @@ export default function PromptInput({
 
     const handleCollectionSelect = () => console.log("Selected collection")
 
-    // ── suggestion pills ───────────────────────────────────────────────────
+    const hasChips = attachedFiles.length > 0 || pastedChips.length > 0
+
     const renderPills = () =>
         pills.map((pill, index: number) => (
             <motion.div
@@ -248,20 +372,35 @@ export default function PromptInput({
             </motion.div>
         ))
 
-    // ── render ─────────────────────────────────────────────────────────────
     return (
         <div className="w-full max-w-3xl mx-auto">
             <form ref={formRef} action={handleAction} onSubmit={handleSubmit} className="relative">
-                <input type="file" ref={fileInputRef} accept="*/*" className="hidden" onChange={handleFileChange} />
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="*/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileChange}
+                />
                 {projectId && <input type="hidden" name="projectId" value={projectId} />}
 
                 <div
                     className="relative rounded-2xl cursor-text transition-all border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 hover:border-neutral-400 hover:focus-within:border-neutral-500 focus-within:border-neutral-500 dark:hover:border-neutral-700 dark:hover:focus-within:border-neutral-500 dark:focus-within:border-neutral-500 border-input bg-background focus-within:ring-4 ring-neutral-500/40"
                     onClick={() => textareaRef.current?.focus()}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
                 >
-                    {/* ── Pasted text chips ───────────────────────────── */}
+                    {/* Drag overlay */}
                     <AnimatePresence>
-                        {pastedChips.length > 0 && (
+                        {isDragging && <DragOverlay />}
+                    </AnimatePresence>
+
+                    {/* Chips row — file attachments + pasted text */}
+                    <AnimatePresence>
+                        {hasChips && (
                             <motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
@@ -269,6 +408,13 @@ export default function PromptInput({
                                 transition={{ duration: 0.15 }}
                                 className="flex flex-wrap gap-2 px-3 pt-3"
                             >
+                                {attachedFiles.map(attached => (
+                                    <FileChip
+                                        key={attached.id}
+                                        attached={attached}
+                                        onRemove={removeFileChip}
+                                    />
+                                ))}
                                 {pastedChips.map(chip => (
                                     <PastedTextChip key={chip.id} chip={chip} onRemove={removePastedChip} />
                                 ))}
@@ -276,7 +422,6 @@ export default function PromptInput({
                         )}
                     </AnimatePresence>
 
-                    {/* ── Textarea ─────────────────────────────────────── */}
                     <PromptTextarea
                         textareaRef={textareaRef}
                         className={className}
@@ -290,10 +435,9 @@ export default function PromptInput({
                         defaultValue={defaultValue}
                     />
 
-                    {/* ── Toolbar ──────────────────────────────────────── */}
                     <div className="flex items-center justify-between p-3 pt-0">
                         <div className="flex items-center gap-2">
-                            {/* Attach file */}
+                            {/* Attach file — now accepts multiple */}
                             <Button
                                 type="button" size="icon" variant="ghost"
                                 className="cursor-pointer text-neutral-500 hover:bg-neutral-300 dark:hover:bg-neutral-700 h-8 w-8 rounded-xl"
@@ -303,7 +447,6 @@ export default function PromptInput({
                                 <span className="sr-only">Attach file</span>
                             </Button>
 
-                            {/* Model switcher (hidden by default) */}
                             {showModelSwitcher && (
                                 <Select onValueChange={onModelChange} name="model" defaultValue="gpt-4.1-mini">
                                     <SelectTrigger className="bg-transparent dark:bg-transparent border-transparent hover:bg-transparent focus:bg-transparent focus:ring-0 focus:border-transparent">
@@ -327,8 +470,9 @@ export default function PromptInput({
                         </div>
 
                         <div className="flex flex-1 justify-end items-center gap-2">
-                            {/* Send button is enabled when there's a prompt OR at least one chip */}
-                            <PromptSubmit disabled={isEmpty(prompt) && pastedChips.length === 0} />
+                            <PromptSubmit
+                                disabled={isEmpty(prompt) && pastedChips.length === 0 && attachedFiles.length === 0}
+                            />
                         </div>
                     </div>
                 </div>

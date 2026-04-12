@@ -6,6 +6,7 @@ import {
     LayersIcon,
     PlusIcon,
     BarChart3Icon,
+    BlocksIcon,
 } from "lucide-react";
 
 export const appMenuItems = [
@@ -24,6 +25,11 @@ export const appMenuItems = [
         name: "Collections",
         icon: FolderIcon,
         href: "/collections"
+    },
+    {
+        name: "Integrations",
+        icon: BlocksIcon,
+        href: "/integrations"
     },
     {
         name: "Usage",

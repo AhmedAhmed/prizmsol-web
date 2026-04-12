@@ -38,7 +38,7 @@ export default function Chat({
     } = useChat({
         id: project.id,
         messages: msgs,
-        experimental_throttle: 150, // fixes the repeated component update issue
+        experimental_throttle: 150,
         transport: new DefaultChatTransport({
             api: '/api/chat',
             prepareSendMessagesRequest: ({ id, messages }) => {
@@ -116,47 +116,55 @@ export default function Chat({
     }
 
     return (
-        <div className={cn("flex flex-col flex-1 w-full max-w-[calc(100vw-70px)] lg:max-w-[calc(100vw-265px)]", {
+        <div className={cn("flex flex-col flex-1 w-full max-w-[calc(100vw-70px)] h-[calc(100vh-25px)] lg:max-w-[calc(100vw-265px)] overflow-hidden", {              
             "max-w-[calc(100vw-60px)] lg:max-w-[calc(100vw-265px)]": isExpanded,
             "max-w-[calc(100vw-60px)] lg:max-w-[calc(100vw-60px)]": !isExpanded,
         })}>
             <ResizablePanelGroup
                 direction="horizontal"
-                className="group flex flex-1 overflow-hidden"
+                className="group flex flex-1 overflow-hidden h-full"
             >
-                <ResizablePanel id="main" order={1} defaultSize={artifact.isVisible ? 40 : 100} minSize={40} className="flex flex-col min-w-[300px]">
-                    <div
-                        className="flex flex-1 relative flex-col w-full overflow-hidden"
-                    >
-                        <SidebarTitle
-                            project={project}
-                            numberOfMessages={messages.length}
-                        />
-                        <div className="flex flex-col mx-auto w-full">
-                            <Messages
-                                messages={messages}
-                                artifactData={initialArtifact}
-                                status={status}
-                                isLoading={isLoading}
-                                isToolbarOpen={artifact.isVisible}
+                <ResizablePanel id="main" order={1} defaultSize={artifact.isVisible ? 40 : 100} minSize={40} className="flex flex-col min-w-[300px] py-0">
+                    <div className="flex flex-col h-full w-full relative">
+                        <div className="flex-none bg-background z-10">
+                            <SidebarTitle
+                                project={project}
+                                numberOfMessages={messages.length}
                             />
                         </div>
-                        <div
-                            className="flex justify-center items-center absolute bottom-0 px-4 w-full bg-transparent dark:bg-transparent z-20 min-h-[135px] flex-col pb-2.5"
-                        >
-                            <PromptInput
-                                showPills={false}
-                                placeholder="Ask a follow up..."
-                                className="max-h-[500px]"
-                                input={input}
-                                handleInputChange={setInput}
-                                onSubmit={handleSubmit}
-                                onModelChange={handleModelChange}
-                                clearOnSubmit={true}
-                                projectId={project.id}
-                                messagesCount={messagesCount}
-                            />
-                            <span className="text-xs text-neutral-500 text-center mt-1">Prizmsol can make mistakes. Please double check responses.</span>
+
+                        {/* Messages area - Scrollable and takes up remaining space */}
+                        <div className="flex-1 overflow-y-auto min-h-0">
+                            <div className="flex flex-col mx-auto w-full max-w-3xl py-4">
+                                <Messages
+                                    messages={messages}
+                                    artifactData={initialArtifact}
+                                    status={status}
+                                    isLoading={isLoading}
+                                    isToolbarOpen={artifact.isVisible}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Prompt area - Anchored to bottom, expands upwards */}
+                        <div className="flex-none p-4 bg-background">
+                            <div className="flex flex-col mx-auto w-full max-w-3xl">
+                                <PromptInput
+                                    showPills={false}
+                                    placeholder="Ask a follow up..."
+                                    className="max-h-[500px] w-full"
+                                    input={input}
+                                    handleInputChange={setInput}
+                                    onSubmit={handleSubmit}
+                                    onModelChange={handleModelChange}
+                                    clearOnSubmit={true}
+                                    projectId={project.id}
+                                    messagesCount={messagesCount}
+                                />
+                                <span className="text-xs text-neutral-500 text-center mt-2">
+                                    Prizmsol can make mistakes. Please double check responses.
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </ResizablePanel>
