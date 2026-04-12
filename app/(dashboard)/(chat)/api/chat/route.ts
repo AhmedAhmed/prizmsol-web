@@ -179,8 +179,6 @@ export async function POST(req: Request) {
           });
         }
 
-        console.log(newMessages);
-
         revalidatePath('/', 'layout');
       },
       onError: (error: any) => {

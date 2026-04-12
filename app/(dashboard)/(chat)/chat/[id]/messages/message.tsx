@@ -1,15 +1,12 @@
 import { ArtifactData } from "@/components/artifact";
 import { ChatReasoning } from "@/components/chat/chat-reasoning";
 import { Markdown } from "@/components/markdown";
-import SimpleTooltip from "@/components/simple-tooltip";
-import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useArtifact } from "@/hooks/use-artifact";
 import { cn } from "@/lib/utils";
 import { UIMessage as Msg } from "ai";
 import { CodeIcon, FileTextIcon, GlobeIcon, Loader2Icon, LoaderIcon, TableIcon, UserIcon } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -26,7 +23,6 @@ export default function Message({
 }) {
     const { setArtifact, artifact } = useArtifact();
     const router = useRouter();
-    console.log("message: ", message);
 
     useEffect(() => {
         if (status === "ready" && message.role === "assistant") {

@@ -1,14 +1,11 @@
 import {
     CreditCardIcon,
-    FilesIcon,
     FolderIcon,
     HistoryIcon,
     KeyRoundIcon,
     LayersIcon,
     PlusIcon,
     BarChart3Icon,
-    UsersIcon,
-    ZapIcon
 } from "lucide-react";
 
 export const appMenuItems = [
