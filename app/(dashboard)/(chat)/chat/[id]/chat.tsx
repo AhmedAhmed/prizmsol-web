@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, UIMessage } from "ai";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Messages from "./messages";
 import SidebarTitle from "./sidebar-title";
 
@@ -29,6 +29,8 @@ export default function Chat({
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const { isExpanded } = useSidebar();
     const didAutoRegenerateRef = useRef(false);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+    const isAtBottomRef = useRef(true);
 
     const {
         messages,
@@ -102,6 +104,48 @@ export default function Chat({
         }
     }, [status, msgs, regenerate]);
 
+    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+        if (!chatContainerRef.current) return;
+        chatContainerRef.current.scrollTo({
+            top: chatContainerRef.current.scrollHeight,
+            behavior,
+        });
+    }, []);
+
+    const handleScroll = useCallback(() => {
+        if (!chatContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+        isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 80;
+    }, []);
+
+    // Jump to bottom instantly on first load
+    useEffect(() => {
+        scrollToBottom("instant");
+    }, []);
+
+    // Scroll to bottom on new messages if user is at bottom
+    useEffect(() => {
+        if (isAtBottomRef.current) {
+            scrollToBottom("smooth");
+        }
+    }, [messages]);
+
+    // During streaming, use MutationObserver to keep scrolling as content grows
+    useEffect(() => {
+        if (status !== "streaming") return;
+        const el = chatContainerRef.current;
+        if (!el) return;
+
+        const observer = new MutationObserver(() => {
+            if (isAtBottomRef.current) {
+                scrollToBottom("instant");
+            }
+        });
+
+        observer.observe(el, { childList: true, subtree: true, characterData: true });
+        return () => observer.disconnect();
+    }, [status, scrollToBottom]);
+
     const handleModelChange = (value: string) => {
         setModel(value);
     }
@@ -134,7 +178,11 @@ export default function Chat({
                         </div>
 
                         {/* Messages area - Scrollable and takes up remaining space */}
-                        <div className="flex-1 overflow-y-auto min-h-0">
+                        <div
+                            ref={chatContainerRef}
+                            onScroll={handleScroll}
+                            className="flex-1 overflow-y-auto min-h-0"
+                        >
                             <div className="flex flex-col mx-auto w-full max-w-3xl py-4">
                                 <Messages
                                     messages={messages}

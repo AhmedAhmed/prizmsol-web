@@ -93,10 +93,6 @@ export default function Message({
                                 status === "streaming" &&
                                 index === (message.parts?.length ?? 0) - 1;
 
-                            if (!isStreamingThought) {
-
-                            }
-
                             return (
                                 <div key={index} className={"flex flex-col space-y-4"}>
                                     <ChatReasoning

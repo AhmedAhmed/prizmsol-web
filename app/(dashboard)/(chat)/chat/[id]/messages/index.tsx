@@ -1,7 +1,5 @@
 import { ArtifactData } from "@/components/artifact";
-import { cn } from "@/lib/utils";
 import { UIMessage } from "ai";
-import { useCallback, useEffect, useRef, useState } from "react";
 import Message from "./message";
 
 function PureMessages({
@@ -17,56 +15,10 @@ function PureMessages({
     isToolbarOpen: boolean;
     isLoading: boolean;
 }) {
-    const chatContainerRef = useRef<HTMLDivElement>(null);
-    const isAtBottomRef = useRef(true);
-
-    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
-        if (!chatContainerRef.current) return;
-        chatContainerRef.current.scrollTo({
-            top: chatContainerRef.current.scrollHeight,
-            behavior,
-        });
-    }, []);
-
-    const handleScroll = useCallback(() => {
-        if (!chatContainerRef.current) return;
-        const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
-        isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 80;
-    }, []);
-
-    // Jump to bottom instantly on first load
-    useEffect(() => {
-        scrollToBottom("instant");
-    }, []);
-
-    // Scroll to bottom on new messages if user is at bottom
-    useEffect(() => {
-        if (isAtBottomRef.current) {
-            scrollToBottom("smooth");
-        }
-    }, [messages]);
-
-    // During streaming, use MutationObserver to keep scrolling as content grows
-    useEffect(() => {
-        if (status !== "streaming") return;
-        const el = chatContainerRef.current;
-        if (!el) return;
-
-        const observer = new MutationObserver(() => {
-            if (isAtBottomRef.current) {
-                scrollToBottom("instant");
-            }
-        });
-
-        observer.observe(el, { childList: true, subtree: true, characterData: true });
-        return () => observer.disconnect();
-    }, [status, scrollToBottom]);
-
+    
     return (
         <>
             <div
-                ref={chatContainerRef}
-                onScroll={handleScroll}
                 className="flex flex-col justify-start items-center mx-auto px-5 w-full h-full overflow-hidden overflow-y-auto" 
             >
                 <div className="flex flex-col relative mx-auto gap-10 mt-5 w-full max-w-3xl h-full">
