@@ -35,4 +35,4 @@ export const codeDocumentHandler = createDocumentHandler<ArtifactKind>({
 
         return draftContent;
     }
-})
+});

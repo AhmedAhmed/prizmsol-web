@@ -25,6 +25,7 @@ export const codeArtifact = new Artifact({
         artifactData,
         content,
         setArtifact,
+        status,
     }: {
         artifact: UIArtifact;
         content: string;
@@ -32,7 +33,6 @@ export const codeArtifact = new Artifact({
         setArtifact: (artifact: UIArtifact) => void;
         status: 'streaming' | 'idle' | 'ready' | 'error';
     }) => {
-
         const handleCloseArtifact = () => {
             setArtifact({
                 ...artifact,
@@ -50,7 +50,6 @@ export const codeArtifact = new Artifact({
                 title
             });
         }
-
 
         return (
             <div className="flex flex-col flex-1 overflow-hidden overflow-y-auto bg-neutral-100 dark:bg-neutral-900">
