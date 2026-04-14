@@ -1,104 +1,103 @@
 "use server";
 
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { z } from "zod";
-import { createUser, getUser, updateUserStripeCustomerId } from "@/lib/db/queries";
-import { getStripe } from "@/lib/stripe/server";
 
-const authFormSchema = z.object({
-  email: z.email(),
-  password: z.string().min(6),
-});
-const registerFormSchema = z.object({
-  name: z.string().min(2),
-  email: z.email(),
-  password: z.string().min(6),
+// ─── Schemas ──────────────────────────────────────────────────────────────────
+
+const emailSchema = z.object({
+  email: z.string(),
 });
 
-export type LoginActionState = {
+const otpSchema = z.object({
+  email: z.string(),
+  otp: z.string().length(6),
+});
+
+// ─── Send OTP ─────────────────────────────────────────────────────────────────
+
+export type SendOtpActionState = {
   status: "idle" | "in_progress" | "success" | "failed" | "invalid_data";
   email?: string;
-  password?: string;
 };
 
-export const login = async (
-  _: LoginActionState,
+export const sendOtp = async (
+  _: SendOtpActionState,
   formData: FormData
-): Promise<LoginActionState> => {
+): Promise<SendOtpActionState> => {
   try {
-    const validatedData = authFormSchema.parse({
+    const parsed = emailSchema.safeParse({
       email: formData.get("email"),
-      password: formData.get("password"),
     });
 
-    const [user] = await getUser(validatedData.email);
-    if (!user) return { status: "failed" };
+    if (!parsed.success) {
+      return { status: "invalid_data" };
+    }
 
-    // Return credentials so the client can call signIn()
-    return {
-      status: "success",
-      email: validatedData.email,
-      password: validatedData.password,
-    };
+    const email = parsed.data.email.toLowerCase().trim();
+
+    await auth.api.sendVerificationOTP({
+      body: { email, type: "sign-in" },
+    });
+
+    return { status: "success", email };
   } catch (error) {
-    if (error instanceof z.ZodError) return { status: "invalid_data" };
+    console.error("sendOtp error:", error);
     return { status: "failed" };
   }
 };
 
-export type RegisterActionState = {
+// ─── Verify OTP ───────────────────────────────────────────────────────────────
+
+export type VerifyOtpActionState = {
   status:
     | "idle"
     | "in_progress"
     | "success"
     | "failed"
-    | "user_exists"
+    | "invalid_otp"
     | "invalid_data";
   email?: string;
-  password?: string;
 };
 
-export const register = async (
-  _: RegisterActionState,
+export const verifyOtp = async (
+  _: VerifyOtpActionState,
   formData: FormData
-): Promise<RegisterActionState> => {
+): Promise<VerifyOtpActionState> => {
   try {
-    const validatedData = registerFormSchema.parse({
-      name: formData.get("name"),
+    const parsed = otpSchema.safeParse({
       email: formData.get("email"),
-      password: formData.get("password"),
+      otp: formData.get("otp"),
     });
 
-    const [user] = await getUser(validatedData.email);
-    if (user) return { status: "user_exists" };
-
-    const [createdUser] = await createUser(
-      validatedData.name,
-      validatedData.email,
-      validatedData.password
-    );
-
-    if (createdUser?.id) {
-      const stripe = getStripe();
-      const customer = await stripe.customers.create({
-        email: validatedData.email,
-        name: validatedData.name,
-        metadata: { userId: createdUser.id },
-      });
-
-      await updateUserStripeCustomerId({
-        userId: createdUser.id,
-        stripeCustomerId: customer.id,
-      });
+    if (!parsed.success) {
+      return { status: "invalid_data" };
     }
 
-    // Return credentials so the client can call signIn()
-    return {
-      status: "success",
-      email: validatedData.email,
-      password: validatedData.password,
-    };
-  } catch (error) {
-    if (error instanceof z.ZodError) return { status: "invalid_data" };
+    const email = parsed.data.email.toLowerCase().trim();
+    const otp = parsed.data.otp.trim();
+
+    await auth.api.signInEmailOTP({
+      body: { 
+        email,
+        type: "sign-in",
+        otp 
+      },
+      headers: await headers(),
+    });
+
+    return { status: "success", email };
+  } catch (error: any) {
+    console.error("verifyOtp error:", error);
+
+    if (
+      error?.message?.toLowerCase().includes("invalid") ||
+      error?.message?.toLowerCase().includes("otp")
+    ) {
+      return { status: "invalid_otp" };
+    }
+
     return { status: "failed" };
   }
 };

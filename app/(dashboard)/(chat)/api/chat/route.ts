@@ -2,7 +2,6 @@ import { generateTitleFromUserMessage } from '@/app/(dashboard)/(chat)/actions';
 import { chat_research_prompt } from '@/lib/ai/prompts';
 import { createDocumentTool, webSearchTool } from '@/lib/ai/tools';
 import { isProductionEnvironment } from '@/lib/constants';
-import { authOptions } from '@/app/(auth)/auth';
 import { getCreditLimitCents, getCurrentUsageWindow, reconcileUserPlanStatus } from '@/lib/stripe/billing';
 import { getMessagesByChatId, getUserAiCreditUsageTotal, incrementUserAiCreditUsage, saveChat, saveMessages } from '@/lib/db/queries';
 import { gateway } from '@ai-sdk/gateway';
@@ -16,16 +15,18 @@ import {
   type UIMessage,
 } from 'ai';
 import { isEmpty } from 'lodash';
-import { StepForwardIcon } from 'lucide-react';
 import { revalidatePath } from 'next/cache';
-import { getServerSession } from 'next-auth';
 import { v4 as uuid } from 'uuid';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+      headers: await headers() // you need to pass the headers object.
+    })
     if (!session?.user?.id) {
       return new Response('Unauthorized', { status: 401 });
     }

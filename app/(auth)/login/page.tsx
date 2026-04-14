@@ -1,72 +1,45 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
-import { useActionState, useEffect, useState } from "react";
-
-import { type LoginActionState, login } from "../actions";
-import { toast } from "sonner";
 import { AuthForm } from "@/components/chat/auth-form";
 import SubmitButton from "@/components/submit-button";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
+import { type SendOtpActionState, sendOtp } from "../actions";
 
 export default function Page() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [isSuccessful, setIsSuccessful] = useState(false);
 
-  const [state, formAction] = useActionState<LoginActionState, FormData>(
-    login,
+  const [sendState, sendAction] = useActionState<SendOtpActionState, FormData>(
+    sendOtp,
     { status: "idle" }
   );
 
-  const { update: updateSession } = useSession();
-
-
-  const handleSuccess = async () => {
-    if (state.status === "success" && state.email && state.password) {
-      await signIn("credentials", {
-        email: state.email,
-        password: state.password,
-        callbackUrl: "/",
-      });
-      router.refresh();
-    }
-  }
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
   useEffect(() => {
-    if (state.status === "failed") {
-      toast.error("Invalid credentials!");
-    } else if (state.status === "invalid_data") {
-      toast.error("Failed validating your submission!");
-    } else if (state.status === "success" && state.email && state.password) {
-      setIsSuccessful(true);
-      handleSuccess();
+    if (sendState.status === "failed") {
+      toast.error("Failed to send code. Please try again.");
+    } else if (sendState.status === "invalid_data") {
+      toast.error("Please enter a valid email.");
+    } else if (sendState.status === "success" && sendState.email) {
+      toast.success("Code sent to your email!");
+      router.push(`/verify?email=${encodeURIComponent(sendState.email)}`);
     }
-  }, [state.status]);
-
-  const handleSubmit = (formData: FormData) => {
-    setEmail(formData.get("email") as string);
-    formAction(formData);
-  };
+  }, [sendState]);
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Welcome to Prizmsol</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        Welcome to Prizmsol
+      </h1>
+
       <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
-        Sign in to your account to continue
+        Enter your email to receive a login code.
       </p>
-      <AuthForm action={handleSubmit} defaultEmail={email}>
-        <SubmitButton text="Sign In" />
+
+      <AuthForm action={sendAction}>
+        <SubmitButton text="Continue" />
         <p className="text-center text-[13px] text-neutral-600 dark:text-neutral-400">
-          {"No account? "}
-          <Link
-            className="text-black dark:text-white font-semibold underline-offset-4 hover:underline"
-            href="/register"
-          >
-            Sign up
-          </Link>
+          No account needed. Just login with your email.
         </p>
       </AuthForm>
     </>

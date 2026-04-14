@@ -1,8 +1,7 @@
 import { CheckIcon } from "lucide-react";
-import { getServerSession } from "next-auth";
+
 import Link from "next/link";
 import { ChevronLeftIcon } from "lucide-react";
-import { authOptions } from "@/app/(auth)/auth";
 import { CheckoutButton } from "@/components/billing/checkout-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +11,8 @@ import {
   getPlanByProductId,
 } from "@/lib/stripe/billing";
 import { getStripe } from "@/lib/stripe/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 function formatPlanPrice(amount: number | null, interval: string | null) {
   if (amount === null || !interval) {
@@ -26,7 +27,9 @@ export default async function PricingPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth.api.getSession({
+    headers: await headers() // you need to pass the headers object.
+  });
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const checkoutState = resolvedSearchParams.checkout;
   const stripe = getStripe();

@@ -7,17 +7,16 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
-import { ArrowLeftFromLine, GithubIcon, InstagramIcon } from "lucide-react";
+import { ArrowLeftFromLine } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import SimpleBar from "simplebar-react";
 import Logo from "../logo";
 import LogoIcon from "../logoIcon";
-import ChatList from "./chat-list";
 import { appMenuItems, loggedOutMenuItems } from "./constants";
 import AccountMenu from "../AccountMenu";
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client"
 
 export default function AppMenu({
     chats,
@@ -35,10 +34,9 @@ export default function AppMenu({
         remaining: number;
     };
 }) {
-    const containerRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
     const isLoggedOut = false;
-    const {data: session, status} = useSession()
+    const {data: session } = authClient.useSession()
     const user = session?.user ?? initialUser;
 
     const menuItems = !isLoggedOut ? appMenuItems : loggedOutMenuItems;
@@ -143,7 +141,7 @@ export default function AppMenu({
                         </ul>
                     </div>
                     <div className="flex flex-col w-full gap-2 px-2.5">
-                        {(status === "authenticated" || initialUser) && (
+                        {(initialUser) && (
                             <AccountMenu
                                 user={user}
                                 accountSnapshot={initialAccountSnapshot}

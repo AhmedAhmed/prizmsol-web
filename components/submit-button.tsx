@@ -9,10 +9,8 @@ import { Button } from "./ui/button";
 export default function SubmitButton({
     text,
     pendingText,
-    doneText,
     className,
     variant,
-    icon: Icon,
 }: {
     text: string;
     className?: string;
@@ -39,11 +37,10 @@ export default function SubmitButton({
     }
 
     return (
-        <Button type="submit" variant={variant} onClick={() => setShowCheck(true)} disabled={status.pending} className={cn('flex justify-center items-center', className)}>
-            {status.pending ? <Loader2Icon size={15} className='animate-spin' /> : renderCheck()}
-            {!status.pending && !showCheck && Icon && <Icon size={15} className='mr-2' />}
+        <Button type="submit" variant={variant} onClick={() => setShowCheck(true)} disabled={status.pending} className={cn('flex cursor-pointer justify-center items-center', className)}>
+            {status.pending && <Loader2Icon size={15} className='animate-spin' />}
             <span className='text-md'>
-                {status.pending ? pendingText || text : showCheck ? doneText || "Done" : text}
+                {status.pending ? pendingText : text}
             </span>
         </Button>
     );

@@ -1,17 +1,11 @@
-import { ThemeProvider } from "@/components/theme-provider";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NProgressProvider from "@/providers/nprogress-provider";
-import PlayerProvider from "@/providers/player-provider";
+import Providers from "@/providers";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Geist } from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "sonner";
-import { SessionProvider } from "next-auth/react";
 import "./globals.css";
-import { NextAuthProvider } from "@/providers/next-auth-provider";
-import Providers from "@/providers";
 
-const inter = Inter({ subsets: ["latin"] });
+const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
     title: "PrizmSol",
@@ -26,7 +20,7 @@ export default async function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <body
-                className={`${inter.className} dark:bg-neutral-900 bg-neutral-50 text-black relative dark:text-white flex min-h-full flex-col antialiased selection:bg-blue-700/80 selection:text-white dark:selection:bg-blue-700/80 dark:selection:text-white`}
+                className={`${geist.className} dark:bg-neutral-900 bg-neutral-50 text-black relative dark:text-white flex min-h-full flex-col antialiased selection:bg-blue-700/80 selection:text-white dark:selection:bg-blue-700/80 dark:selection:text-white`}
             >
                 <Suspense>
                     <Providers>

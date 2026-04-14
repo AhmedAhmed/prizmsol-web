@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/(auth)/auth";
 import { getUserById, updateUserPlanAndSubscription } from "@/lib/db/queries";
 import { getStripe } from "@/lib/stripe/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export async function POST() {
-  const session = await getServerSession(authOptions);
+  const session = await auth.api.getSession({
+      headers: await headers() // you need to pass the headers object.
+  })
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

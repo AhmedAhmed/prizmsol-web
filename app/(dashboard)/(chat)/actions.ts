@@ -1,12 +1,13 @@
 'use server';
 
 import { title_prompt } from "@/lib/ai/prompts";
-import { authOptions } from "@/app/(auth)/auth";
+import { auth } from "@/lib/auth";
 import { addToCollection, saveChat, saveMessages } from "@/lib/db/queries";
 import { gateway } from "@ai-sdk/gateway";
 
 import { generateText } from "ai";
-import { getServerSession } from "next-auth";
+
+import { headers } from "next/headers";
 import { v4 as uuid } from "uuid";
 
 export async function generateTitleFromUserMessage(message: string) {
@@ -20,7 +21,9 @@ export async function generateTitleFromUserMessage(message: string) {
 }
 
 export async function submitMessage(formData: FormData) {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+        headers: await headers() // you need to pass the headers object.
+    })
     if (!session?.user?.id) {
         return { error: "Unauthorized" };
     }

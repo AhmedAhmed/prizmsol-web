@@ -1,28 +1,33 @@
-import { getToken } from "next-auth/jwt";
 import { type NextRequest, NextResponse } from "next/server";
-import { isDevelopmentEnvironment } from "./lib/constants";
+ import { auth } from "@/lib/auth";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
+  // Health check
   if (pathname.startsWith("/ping")) {
     return new Response("pong", { status: 200 });
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: !isDevelopmentEnvironment,
+  // 🔐 Replace next-auth getToken with BetterAuth session
+  const session = await auth.api.getSession({
+    headers: request.headers,
   });
 
-  const isAuthPage = ["/login", "/register"].includes(pathname);
+  const isLoggedIn = !!session;
+
+  const isAuthPage = ["/login", "/verify"].includes(pathname);
   const isPublicPage = ["/pricing", "/home"].includes(pathname);
   const isStripeApiPath = pathname.startsWith("/api/stripe/");
 
-  if (!token) {
-    if (isAuthPage || isPublicPage || isStripeApiPath) return NextResponse.next();
+  if (!isLoggedIn) {
+    if (isAuthPage || isPublicPage || isStripeApiPath) {
+      return NextResponse.next();
+    }
+
     const redirectUrl = encodeURIComponent(pathname);
+
     return NextResponse.redirect(
       new URL(`${base}/login?redirectUrl=${redirectUrl}`, request.url)
     );
@@ -37,12 +42,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all paths EXCEPT:
-     * - _next/static, _next/image (Next.js internals)
-     * - favicon, sitemap, robots (static files)
-     * - api/auth (NextAuth routes — must be excluded)
-     */
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|api/auth).*)",
   ],
 };

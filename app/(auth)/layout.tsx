@@ -1,6 +1,4 @@
 import Logo from "@/components/logo";
-import LogoIcon from "@/components/logoIcon";
-import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function AuthLayout({

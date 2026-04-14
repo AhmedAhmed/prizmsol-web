@@ -1,12 +1,15 @@
-import { getServerSession } from "next-auth";
+
 import { NextResponse } from "next/server";
-import { authOptions } from "@/app/(auth)/auth";
 import { ensureStripeCustomerForUser, getRecurringPriceForProduct } from "@/lib/stripe/billing";
 import { getStripe } from "@/lib/stripe/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+        headers: await headers() // you need to pass the headers object.
+    })
 
     if (!session?.user?.id || !session.user.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

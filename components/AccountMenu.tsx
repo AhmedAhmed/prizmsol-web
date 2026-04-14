@@ -118,7 +118,7 @@ export default function AccountMenu({
                             <div className="flex items-center flex-1 gap-2">
                                 <ProgressAvatar size={32} />
                                 {showName && <div className="flex flex-col items-start">
-                                    <span className="text-md">{user?.name}</span>
+                                    <span className="text-md">{user?.name || "Unknown User"}</span>
                                     <span className="text-xs text-neutral-500 dark:text-neutral-400">{capitalize(plan)} </span>
                                 </div>}
                             </div>

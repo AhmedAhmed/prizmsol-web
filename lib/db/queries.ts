@@ -3,38 +3,12 @@ import 'server-only';
 import { and, asc, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { db } from './drizzle';
 import { aiCreditUsageEvent, chat, CollectionItems, Collections, DBMessage, Documents, Likes, message, user, User } from './schema';
-import { generateHashedPassword } from '../utils';
 
 export async function getUser(email: string): Promise<User[]> {
     try {
         return await db.select().from(user).where(eq(user.email, email));
     } catch (_error) {
         throw new Error("Failed to get user");
-    }
-}
-  
-export async function createUser(
-    name: string,
-    email: string,
-    password: string,
-    stripeCustomerId?: string,
-) {
-    const hashedPassword = generateHashedPassword(password);
-
-    try {
-        return await db
-            .insert(user)
-            .values({
-                name,
-                email,
-                password: hashedPassword,
-                plan: "free",
-                aiCreditUsedCents: 0,
-                stripeCustomerId,
-            })
-            .returning();
-    } catch (_error) {
-        throw new  Error("Failed to create user");
     }
 }
 

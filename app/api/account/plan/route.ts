@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import Stripe from "stripe";
-import { authOptions } from "@/app/(auth)/auth";
 import { getUserById, updateUserPlanAndSubscription } from "@/lib/db/queries";
 import { getPlanByProductId } from "@/lib/stripe/billing";
 import { getStripe } from "@/lib/stripe/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await auth.api.getSession({
+      headers: await headers() // you need to pass the headers object.
+  })
   if (!session?.user?.id) {
     return NextResponse.json({ plan: "free" }, { status: 401 });
   }
