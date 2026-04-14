@@ -5,14 +5,23 @@ import { isEmpty } from "lodash";
 import { MessageCircleDashedIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import Paging from "./paging";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export default async function RecentsPage() {
+    const session = await auth.api.getSession({
+        headers: await headers() // you need to pass the headers object.
+    })
+    if (!session?.user?.id) {
+        return new Response('Unauthorized', { status: 401 });
+    }
     const {
         chats,
         pagination
     } = await getChats({
         page: 1,
         limit: 10,
+        userId: session.user.id
     });
 
     if (isEmpty(chats)) {

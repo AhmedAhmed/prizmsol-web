@@ -86,6 +86,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/mdx": "^2.0.13",
     "@types/request-ip": "^0.0.41",
+    "@vercel/blob": "^2.3.3",
     "@vercel/functions": "^2.0.3",
     "@webcontainer/api": "^1.5.3",
     "ai": "^6.0.134",

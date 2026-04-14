@@ -28,11 +28,12 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
-import { Avatar, AvatarImage } from "./ui/avatar";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ModeToggle } from "./ui/mode-toggle";
 import { signOut } from "next-auth/react";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export default function AccountMenu({
     user,
@@ -92,22 +93,6 @@ export default function AccountMenu({
     };
 
     const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
-    const ringPercent = usagePercent ?? 0;
-
-    const ProgressAvatar = ({ size = 32 }: { size?: number }) => (
-        <div className="group relative flex items-center justify-center" style={{ width: size + 8, height: size + 8 }}>
-            <Avatar className="relative flex justify-center items-center bg-emerald-600 dark:bg-emerald-700 h-[32px] w-[32px]">
-                {user?.imageUrl ? (
-                    <AvatarImage src={user?.imageUrl} className="flex h-[32px] w-[32px]" />
-                ) : (
-                    <span className="text-md text-white">{getInitials(name)}</span>
-                )}
-            </Avatar>
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/60 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
-                {ringPercent.toFixed(0)}%
-            </div>
-        </div>
-    );
 
     return (
         <div className="flex flex-1 h-full w-full bg-transparent">
@@ -116,7 +101,13 @@ export default function AccountMenu({
                     <div className="flex flex-1 gap-1 justify-start items-center cursor-pointer active:opacity-80">
                         <Button variant="ghost" className={cn("relative hover:bg-neutral-200 dark:hover:bg-neutral-900 justify-start px-2 py-1 my-2.5 h-auto w-full", !showName && "hover:bg-transparent dark:hover:bg-transparent")}>
                             <div className="flex items-center flex-1 gap-2">
-                                <ProgressAvatar size={32} />
+                                <Avatar className="relative flex justify-center items-center bg-emerald-600 dark:bg-emerald-700 h-[32px] w-[32px]">
+                                    {user?.image ? (
+                                        <Image src={user?.image as string} alt="Avatar" width={35} height={35} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <AvatarFallback className="text-md text-white">{getInitials(name)}</AvatarFallback>
+                                    )}
+                                </Avatar>
                                 {showName && <div className="flex flex-col items-start">
                                     <span className="text-md">{user?.name || "Unknown User"}</span>
                                     <span className="text-xs text-neutral-500 dark:text-neutral-400">{capitalize(plan)} </span>
@@ -128,7 +119,6 @@ export default function AccountMenu({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[300px]">
                     <DropdownMenuLabel className="flex items-center gap-2">
-                        <ProgressAvatar size={35} />
                         <div className="flex flex-col">
                             <span className="text-md">{name}</span>
                             {user?.email && <span className="flex text-md font-normal">{user.email}</span>}

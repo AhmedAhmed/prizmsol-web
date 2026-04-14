@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     if (isEmpty(messagesFromDb) && latestUserMessage) {
       const textContent = latestUserMessage.parts?.map(getPartText).find(Boolean) ?? '';
       const title = await generateTitleFromUserMessage(textContent);
-      await saveChat({ id: chatId, title });
+      await saveChat({ id: chatId, title, userId: session.user.id });
     }
 
     const serializeParts = (parts: unknown) => JSON.stringify(parts ?? []);

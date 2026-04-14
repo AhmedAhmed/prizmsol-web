@@ -110,6 +110,7 @@ export type Verification = InferSelectModel<typeof verification>;
 export const chat = pgTable("chats", {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     title: text("title").notNull(),
+    userId: text("userId").references(() => user.id),
     visibility: varchar("visibility", { enum: ["public", "private"] })
         .notNull()
         .default("private"),

@@ -12,6 +12,20 @@ export async function getUser(email: string): Promise<User[]> {
     }
 }
 
+export async function updateUserInformation(userId: string, data: { name?: string; image?: string; }): Promise<boolean> {
+    try {
+        const response = await db.update(user).set(data).where(eq(user.id, userId));
+        if (response.count > 0) {
+            console.log("User updated successfully");
+            return true;
+        }
+        return false;
+    } catch (_error) {
+        console.error("Failed to update user information");
+        return false;
+    }
+}
+
 export async function updateUserStripeCustomerId({
     userId,
     stripeCustomerId,
@@ -171,15 +185,18 @@ export async function getUserAiCreditUsageTotal({
 export async function saveChat({
     id,
     title,
+    userId
 }: {
     id: string;
     title: string;
+    userId: string;
 }) {
     try {
         return await db.insert(chat).values({
             id,
             createdAt: new Date(),
             title,
+            userId
         });
     } catch (error) {
         console.error('Failed to save chat in database');
@@ -200,9 +217,11 @@ export async function deleteChatById({ id }: { id: string }) {
 export async function getChats({
     page = 1,
     limit = 20,
+    userId
 }: {
     page?: number;
     limit?: number;
+    userId: string;
 }) {
     try {
         // Validate page number
@@ -218,7 +237,7 @@ export async function getChats({
             .select({ count: count() })
             .from(chat)
             .where(
-                and(eq(chat.isDeleted, false)),
+                and(eq(chat.isDeleted, false), eq(chat.userId, userId)),
             );
 
         const totalPages = Math.ceil(totalCount / limit);

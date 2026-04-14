@@ -38,6 +38,7 @@ export async function submitMessage(formData: FormData) {
     const chat = await saveChat({
         id,
         title: title,
+        userId: session.user.id
     });
 
     if (chat.count == 0) {

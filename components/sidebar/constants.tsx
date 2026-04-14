@@ -6,6 +6,7 @@ import {
     LayersIcon,
     PlusIcon,
     BarChart3Icon,
+    SettingsIcon,
 } from "lucide-react";
 
 export const appMenuItems = [
@@ -29,6 +30,11 @@ export const appMenuItems = [
         name: "Usage",
         icon: BarChart3Icon,
         href: "/usage",
+    },
+    {
+        name: "Settings",
+        icon: SettingsIcon,
+        href: "/settings",
     }
 ]
 

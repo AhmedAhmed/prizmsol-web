@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
             hostname: 'img.clerk.com'
         }, {
             hostname: 'd3pr3omapn87tj.cloudfront.net'
+        }, {
+            hostname: "urjgzvscdikmyccb.public.blob.vercel-storage.com"
         }],
     },
     experimental: {

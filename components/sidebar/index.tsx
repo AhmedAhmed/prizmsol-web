@@ -6,14 +6,17 @@ import { auth } from "@/lib/auth";
 
 export default async function Sidebar() {
     const expanded = (await cookies()).get("sidebar_state")?.value as string;
-
-    const chats = await getChats({
-        page: 1,
-        limit: 25,
-    });
     const session = await auth.api.getSession({
         headers: await headers() // you need to pass the headers object.
     })
+    if (!session?.user?.id) {
+        return new Response('Unauthorized', { status: 401 });
+    }
+    const chats = await getChats({
+        page: 1,
+        limit: 25,
+        userId: session.user.id
+    });
     const accountSnapshot = await getAccountSnapshotAction();
 
     return (
