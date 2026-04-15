@@ -7,7 +7,7 @@ export async function proxy(request: NextRequest) {
   const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   const rootDomain =
-    process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+    process.env.NEXT_PUBLIC_URL || "localhost:3000";
 
   // Extract subdomain
   let subdomain: string | null = null;
