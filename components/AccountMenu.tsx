@@ -9,7 +9,8 @@ import {
     ScrollIcon,
     Settings,
     SunMoonIcon,
-    BarChartIcon
+    BarChartIcon,
+    ClockIcon,
 } from "lucide-react";
 
 import {
@@ -46,20 +47,22 @@ export default function AccountMenu({
         totalUsed: number;
         limit: number;
         remaining: number;
+        cancelAtPeriodEnd?: boolean;
     };
     showName?: boolean;
 }) {
     const initialPlan = accountSnapshot?.plan ?? user?.plan ?? "free";
     const initialLimit = accountSnapshot?.limit ?? 0;
     const initialRemaining = accountSnapshot?.remaining ?? 0;
-    const initialUsed = accountSnapshot?.totalUsed ?? 0;
-    const initialUsagePercent = initialLimit > 0 ? Math.min(100, (initialUsed / initialLimit) * 100) : 0;
 
     const [plan, setPlan] = useState<string>(initialPlan);
-    const [usagePercent, setUsagePercent] = useState<number | null>(initialUsagePercent);
     const [totalCredits, setTotalCredits] = useState<number>(Math.round(initialLimit * 100));
     const [remainingCredits, setRemainingCredits] = useState<number>(Math.max(0, Math.round(initialRemaining * 100)));
     const [isCancelling, setIsCancelling] = useState(false);
+    const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState<boolean>(
+        accountSnapshot?.cancelAtPeriodEnd ?? false
+    );
+
     const name = user?.name || "Unknown User";
     const getInitials = (name: string) => {
         const names = name ? name.split(" ") : "AA";
@@ -83,7 +86,7 @@ export default function AccountMenu({
                 toast.error("Unable to cancel plan");
                 return;
             }
-            setPlan("plan");
+            setCancelAtPeriodEnd(true);
             toast.success("Plan will be cancelled at end of billing period.");
         } catch (_error) {
             toast.error("Unable to cancel plan");
@@ -146,16 +149,23 @@ export default function AccountMenu({
                             </div>
                         </div>
                         {plan !== "free" ? (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="mt-3 w-full"
-                                onClick={handleCancelPlan}
-                                disabled={isCancelling}
-                            >
-                                {isCancelling ? "Cancelling..." : "Cancel plan"}
-                            </Button>
+                            cancelAtPeriodEnd ? (
+                                <div className="mt-3 flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+                                    <ClockIcon className="h-3.5 w-3.5 shrink-0" />
+                                    Cancellation scheduled — active until end of billing period.
+                                </div>
+                            ) : (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-3 w-full"
+                                    onClick={handleCancelPlan}
+                                    disabled={isCancelling}
+                                >
+                                    {isCancelling ? "Cancelling..." : "Cancel plan"}
+                                </Button>
+                            )
                         ) : null}
                     </div>
                     <DropdownMenuSeparator />

@@ -247,7 +247,7 @@ export async function getChats({
             .select()
             .from(chat)
             .where(
-                and(eq(chat.isDeleted, false)),
+                and(eq(chat.isDeleted, false), eq(chat.userId, userId)),
             )
             .orderBy(desc(chat.createdAt))
             .limit(limit)
