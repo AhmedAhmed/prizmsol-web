@@ -14,7 +14,7 @@ export default async function RecentsPage({
         headers: await headers() // you need to pass the headers object.
     })
     if (!session?.user?.id) {
-        return new Response('Unauthorized', { status: 401 });
+        return redirect("/login");
     }
     const page = (await params).p as string;
     const p = parseInt(page) || 1;

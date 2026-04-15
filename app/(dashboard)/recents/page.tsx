@@ -7,13 +7,14 @@ import Link from "next/link";
 import Paging from "./paging";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default async function RecentsPage() {
     const session = await auth.api.getSession({
         headers: await headers() // you need to pass the headers object.
     })
     if (!session?.user?.id) {
-        return new Response('Unauthorized', { status: 401 });
+        return redirect("/login");
     }
     const {
         chats,
