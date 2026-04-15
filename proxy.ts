@@ -25,7 +25,7 @@ export async function proxy(request: NextRequest) {
 
   const isLoggedIn = !!session;
   const isAuthPage = ["/login", "/verify"].includes(url.pathname);
-  const isPublicPage = ["/pricing", "/home"].includes(url.pathname);
+  const isPublicPage = ["/pricing", "/home", "/site"].includes(url.pathname);
   const isStripeApiPath = url.pathname.startsWith("/api/stripe/");
 
   if (subdomain && subdomain !== "www") {
@@ -33,7 +33,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!isLoggedIn) {
-    if (isAuthPage || isPublicPage || isStripeApiPath) {
+    if (isAuthPage || isPublicPage || isStripeApiPath || subdomain) {
       return NextResponse.next();
     }
     const redirectUrl = encodeURIComponent(url.pathname);
