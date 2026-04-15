@@ -3,6 +3,7 @@ import { getAccountSnapshotAction } from "@/app/actions/billing";
 import { cookies, headers } from "next/headers";
 import AppMenu from "./AppMenu";
 import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function Sidebar() {
     const expanded = (await cookies()).get("sidebar_state")?.value as string;
@@ -10,7 +11,7 @@ export default async function Sidebar() {
         headers: await headers() // you need to pass the headers object.
     })
     if (!session?.user?.id) {
-        return new Response('Unauthorized', { status: 401 });
+        return redirect("/login");
     }
     const chats = await getChats({
         page: 1,
