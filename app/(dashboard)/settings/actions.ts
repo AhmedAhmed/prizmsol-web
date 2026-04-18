@@ -1,9 +1,9 @@
 "use server";
-import { revalidatePath } from "next/cache";
-import { SettingsFormSchema, SettingsFormState } from "./definitions";
-import { updateUserInformation } from "@/lib/db/queries";
 import { auth } from "@/lib/auth";
+import { updateUserInformation } from "@/lib/db/queries";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { SettingsFormSchema, SettingsFormState } from "./definitions";
 
 export async function settingsAction(_state: SettingsFormState, formData: FormData) {
 
@@ -17,8 +17,6 @@ export async function settingsAction(_state: SettingsFormState, formData: FormDa
         name: formData.get('name'),
     })
 
-    console.log("validatedFields: ", validatedFields);
-
     // If any form fields are invalid, return early
     if (!validatedFields.success) {
         return {
@@ -26,7 +24,7 @@ export async function settingsAction(_state: SettingsFormState, formData: FormDa
         }
     }
 
-   const isUpdated = await updateUserInformation(user?.id as string, {
+    const isUpdated = await updateUserInformation(user?.id as string, {
         name: validatedFields.data.name,
     });
 
