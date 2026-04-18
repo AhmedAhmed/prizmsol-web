@@ -1,11 +1,12 @@
 import {
+    BarChart3Icon,
     CreditCardIcon,
     FolderIcon,
     HistoryIcon,
     KeyRoundIcon,
     LayersIcon,
+    PenLineIcon,
     PlusIcon,
-    BarChart3Icon,
     SettingsIcon,
 } from "lucide-react";
 
@@ -30,6 +31,11 @@ export const appMenuItems = [
         name: "Usage",
         icon: BarChart3Icon,
         href: "/usage",
+    },
+    {
+        name: "Portfolio",
+        icon: PenLineIcon,
+        href: "/portfolio",
     },
     {
         name: "Settings",

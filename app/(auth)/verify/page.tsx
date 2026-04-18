@@ -7,7 +7,7 @@ import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { type VerifyOtpActionState, verifyOtp } from "../actions";
 
-export default function Page() {
+export default function VerifyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";

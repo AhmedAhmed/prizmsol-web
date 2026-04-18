@@ -6,6 +6,7 @@ import { PencilIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { editProjectTitle } from "./actions/editProjectAction";
+import SubmitButton from "@/components/submit-button";
 
 export default function EditDialog({
     open,
@@ -38,7 +39,7 @@ export default function EditDialog({
                     Edit the title of your chat.
                 </DialogDescription>
                 <form className="space-y-4" action={handleSave}>
-                    <input type="hidden" name="id" value={project?.id} />
+                    <Input type="hidden" name="id" value={project?.id} />
                     <Input
                         placeholder="Untitled Project"
                         className="w-full"
@@ -46,14 +47,11 @@ export default function EditDialog({
                         defaultValue={project?.title}
                     />
                     <DialogFooter>
-                        <Button
-                            variant="destructive"
-                            className="bg-blue-500 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800 text-white"
-                        >
-                            <PencilIcon size={20} />
-                            <span>Save</span>
-                        </Button>
-                        <Button type="button" variant="outline" className="bg-neutral-500 dark:bg-neutral-700 hover:bg-neutral-700 dark:hover:bg-neutral-800 text-white" onClick={() => onOpenChange(false)}>
+                        <SubmitButton
+                            text="Save"
+                            className="cursor-pointer text-white dark:text-white bg-emerald-500 dark:bg-emerald-700 hover:bg-emerald-700 dark:hover:bg-emerald-800 text-white"
+                        />
+                        <Button type="button" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
                     </DialogFooter>

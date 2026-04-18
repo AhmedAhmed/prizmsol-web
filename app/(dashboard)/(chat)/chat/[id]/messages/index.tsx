@@ -31,7 +31,7 @@ function PureMessages({
                             status={status}
                         />
                     ))}
-                    {status === "submitted" && messages.length > 0 && messages[messages.length - 1].role === "user" && <ThinkingMessages />}
+                    {(status === "submitted" || status == "ready") && messages.length > 0 && messages[messages.length - 1].role === "user" && <ThinkingMessages />}
                     <div className="flex flex-1 min-h-2.5" />
                 </div>
             </div>

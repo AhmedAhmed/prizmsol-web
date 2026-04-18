@@ -11,6 +11,7 @@ import {
     SunMoonIcon,
     BarChartIcon,
     ClockIcon,
+    LayoutDashboardIcon,
 } from "lucide-react";
 
 import {
@@ -28,8 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useState } from "react";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { ModeToggle } from "./ui/mode-toggle";
 import { signOut } from "next-auth/react";
@@ -62,6 +62,16 @@ export default function AccountMenu({
     const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState<boolean>(
         accountSnapshot?.cancelAtPeriodEnd ?? false
     );
+    const [portfolio, setPortfolio] = useState<any>(null);
+
+    useEffect(() => {
+        fetch(`/api/portfolio`)
+            .then(res => res.json())
+            .then(data => {
+                const { portfolio: p } = data;
+                setPortfolio(p);
+            });
+    }, []);
 
     const name = user?.name || "Unknown User";
     const getInitials = (name: string) => {
@@ -104,13 +114,13 @@ export default function AccountMenu({
                     <div className="flex flex-1 gap-1 justify-start items-center cursor-pointer active:opacity-80">
                         <Button variant="ghost" className={cn("relative hover:bg-neutral-200 dark:hover:bg-neutral-900 justify-start px-2 py-1 my-2.5 h-auto w-full", !showName && "hover:bg-transparent dark:hover:bg-transparent")}>
                             <div className="flex items-center flex-1 gap-2">
-                                <Avatar className="relative flex justify-center items-center bg-emerald-600 dark:bg-emerald-700 h-[32px] w-[32px]">
+                                <div className="relative overflow-hidden rounded-full flex justify-center items-center bg-emerald-600 dark:bg-emerald-700 h-[32px] w-[32px]">
                                     {user?.image ? (
                                         <Image src={user?.image as string} alt="Avatar" width={35} height={35} className="h-full w-full object-cover" />
                                     ) : (
-                                        <AvatarFallback className="text-md text-white">{getInitials(name)}</AvatarFallback>
+                                        <span className="text-md text-white">{getInitials(name)}</span>
                                     )}
-                                </Avatar>
+                                </div>
                                 {showName && <div className="flex flex-col items-start">
                                     <span className="text-md">{user?.name || "Unknown User"}</span>
                                     <span className="text-xs text-neutral-500 dark:text-neutral-400">{capitalize(plan)} </span>
@@ -174,6 +184,12 @@ export default function AccountMenu({
                             <Link href="/" className="flex items-center w-full">
                                 <Layers className="mr-2 h-4 w-4" />
                                 <span>Home</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href={`http://${portfolio?.vanity}.${process.env.NEXT_PUBLIC_DOMAIN}`} target="_blank" className="flex items-center w-full">
+                                <LayoutDashboardIcon className="mr-2 h-4 w-4" />
+                                <span>Portfolio</span>
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>

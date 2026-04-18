@@ -18,6 +18,7 @@ export const user = pgTable("user", {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     email: text("email").notNull().unique(),
+    bio: text("bio").notNull().default(""),
     emailVerified: boolean("email_verified").default(false).notNull(),
     image: text("image"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -195,6 +196,20 @@ export const sources = pgTable("ai_sources", {
 });
 
 export type Source = InferSelectModel<typeof sources>;
+
+export const portfolio = pgTable("portfolio", {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: text("userId").notNull().references(() => user.id),
+    vanity: varchar("vanity").unique().notNull(),
+    photo: varchar("photo").notNull(),
+    title: varchar("title").notNull(),
+    description: varchar("description").notNull(),
+    theme: varchar("theme").default("prizm").notNull(),
+    config: json("data").notNull(),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type Portfolio = InferSelectModel<typeof portfolio>;
 
 // ─── Relations ────────────────────────────────────────────────────────────────
 

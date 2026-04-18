@@ -121,6 +121,7 @@ layer(base);
 
 body,
 html {
+    background-color: var(--background);
     scroll-behavior: smooth;
 }
 

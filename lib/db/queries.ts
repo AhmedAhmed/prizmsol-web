@@ -2,7 +2,7 @@ import 'server-only';
 
 import { and, asc, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { db } from './drizzle';
-import { aiCreditUsageEvent, chat, CollectionItems, Collections, DBMessage, Documents, Likes, message, user, User } from './schema';
+import { aiCreditUsageEvent, chat, CollectionItems, Collections, DBMessage, Documents, Likes, message, portfolio, user, User } from './schema';
 
 export async function getUser(email: string): Promise<User[]> {
     try {
@@ -45,7 +45,7 @@ export async function updateUserStripeCustomerId({
 
 export async function getUserById(id: string): Promise<User | null> {
     try {
-        const [selectedUser] = await db.select().from(user).where(eq(user.id, id));
+        const [selectedUser] = await db.select().from(user).where(eq(user.id, id as string));
         return selectedUser ?? null;
     } catch (_error) {
         throw new Error("Failed to get user");
@@ -631,6 +631,107 @@ export async function getChatsFromCollection({
             );
     } catch (error: any) {
         console.log("Failed to remove chat from collection");
+        throw error;
+    }
+}
+
+export async function getPortfolioVanity(vanity: string) {
+    try {
+        const [selectedPortfolio] = await db
+            .select()
+            .from(portfolio)
+            .where(eq(portfolio.vanity, vanity));
+        return selectedPortfolio ?? null;
+    } catch (error) {
+        console.error('Failed to get portfolio vanity from database');
+        throw error;
+    }
+}
+
+export async function getPortfolioByUserId(userId: string) {
+    try {
+        const [selectedPortfolio] = await db
+            .select()
+            .from(portfolio)
+            .where(eq(portfolio.userId, userId));
+        return selectedPortfolio ?? null;
+    } catch (error) {
+        console.error('Failed to get portfolio vanity from database');
+        throw error;
+    }
+}
+
+export async function savePortfolio({
+    userId,
+    vanity,
+    photo,
+    title,
+    description,
+    theme,
+    config
+}: {
+    userId: string;
+    vanity: string;
+    photo: string;
+    title: string;
+    description: string;
+    theme: string;
+    config: any;
+}) {
+    try {
+        const isTaken = await getPortfolioVanity(vanity);
+        if (isTaken) {
+            throw new Error('Portfolio vanity already created');
+        }
+        return await db.insert(portfolio).values({
+            userId,
+            vanity,
+            photo,
+            title,
+            description,
+            theme,
+            config,
+            createdAt: new Date()
+        });
+    } catch (error) {
+        console.error('Failed to save portfolio in database');
+        throw error;
+    }
+}
+
+export async function updatePortfolio({
+    userId,
+    vanity,
+    photo,
+    title,
+    description,
+    theme,
+    config
+}: {
+    userId: string;
+    vanity: string;
+    photo: string;
+    title: string;
+    description: string;
+    theme: string;
+    config: any;
+}) {
+    try {
+        const isTaken = await getPortfolioVanity(vanity);
+        if (isTaken) {
+            throw new Error('Portfolio vanity already created');
+        }
+        return await db.update(portfolio).set({
+            userId,
+            vanity,
+            photo,
+            title,
+            description,
+            theme,
+            config,
+        }).where(eq(portfolio.userId, userId));
+    } catch (error) {
+        console.error('Failed to save portfolio in database');
         throw error;
     }
 }

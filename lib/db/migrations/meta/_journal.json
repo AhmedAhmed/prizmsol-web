@@ -15,6 +15,20 @@
       "when": 1776198314611,
       "tag": "0001_smart_galactus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776295242664,
+      "tag": "0002_silky_angel",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776360743461,
+      "tag": "0003_tired_lockjaw",
+      "breakpoints": true
     }
   ]
 }

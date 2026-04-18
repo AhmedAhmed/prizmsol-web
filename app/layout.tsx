@@ -20,7 +20,7 @@ export default async function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <body
-                className={`${geist.className} dark:bg-neutral-900 bg-neutral-50 text-black relative dark:text-white flex min-h-full flex-col antialiased selection:bg-blue-700/80 selection:text-white dark:selection:bg-blue-700/80 dark:selection:text-white`}
+                className={`${geist.className} dark:bg-neutral-900 bg-neutral-50 text-black relative dark:text-white flex min-h-full flex-col antialiased selection:bg-emerald-300 selection:text-emerald-900`}
             >
                 <Suspense>
                     <Providers>

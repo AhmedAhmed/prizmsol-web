@@ -10,7 +10,6 @@ import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { ArrowLeftFromLine } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
 import SimpleBar from "simplebar-react";
 import Logo from "../logo";
 import LogoIcon from "../logoIcon";

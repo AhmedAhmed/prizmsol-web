@@ -7,7 +7,7 @@ import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { type SendOtpActionState, sendOtp } from "../actions";
 
-export default function Page() {
+export default function LoginPage() {
   const router = useRouter();
 
   const [sendState, sendAction] = useActionState<SendOtpActionState, FormData>(
