@@ -6,8 +6,8 @@ const NProgressProvider = ({ children }: any) => {
   return (
     <>
       <ProgressProvider
-        height="4px"
-        color="#3b82f6"
+        height="2px"
+        color="#00bb79"
         options={{ showSpinner: false }}
         shallowRouting>
         {children}

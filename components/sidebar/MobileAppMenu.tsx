@@ -4,12 +4,14 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { ArrowRightFromLine } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SimpleBar from "simplebar-react";
+import AccountMenu from "../AccountMenu";
 import LogoIcon from "../logoIcon";
 import SimpleTooltip from "../simple-tooltip";
 import { appMenuItems, loggedOutMenuItems } from "./constants";
@@ -19,9 +21,9 @@ export default function MobileAppMenu({
     onClickHandler: () => void;
 }) {
     const pathname = usePathname();
-
+    const { data: session } = authClient.useSession()
+    const user = session?.user;
     const isLoggedOut = false;
-
     const menuItems = !isLoggedOut ? appMenuItems : loggedOutMenuItems;
 
     const isSelected = (url: string) => {
@@ -106,6 +108,7 @@ export default function MobileAppMenu({
                             {menuItems.map(renderItem)}
                         </ul>
                     </div>
+                    <AccountMenu user={user} showName={false} />
                 </div>
             </SimpleBar>
         </div>

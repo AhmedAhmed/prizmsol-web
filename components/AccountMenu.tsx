@@ -1,17 +1,17 @@
 "use client";
 import {
+    BarChartIcon,
     ChevronsUpDownIcon,
+    ClockIcon,
     CreditCardIcon,
     Layers,
+    LayoutDashboardIcon,
     LifeBuoyIcon,
     LockIcon,
     LogOutIcon,
     ScrollIcon,
     Settings,
     SunMoonIcon,
-    BarChartIcon,
-    ClockIcon,
-    LayoutDashboardIcon,
 } from "lucide-react";
 
 import {
@@ -28,13 +28,13 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { signOut } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { ModeToggle } from "./ui/mode-toggle";
-import { signOut } from "next-auth/react";
-import { toast } from "sonner";
-import Image from "next/image";
 
 export default function AccountMenu({
     user,
@@ -121,7 +121,7 @@ export default function AccountMenu({
                                         <span className="text-md text-white">{getInitials(name)}</span>
                                     )}
                                 </div>
-                                {showName && <div className="flex flex-col items-start">
+                                {showName && <div className="hidden lg:flex flex-col items-start">
                                     <span className="text-md">{user?.name || "Unknown User"}</span>
                                     <span className="text-xs text-neutral-500 dark:text-neutral-400">{capitalize(plan)} </span>
                                 </div>}
@@ -200,7 +200,7 @@ export default function AccountMenu({
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                             <Link href="/usage" className="flex items-center w-full">
-                            <BarChartIcon className="mr-2 h-4 w-4" />
+                                <BarChartIcon className="mr-2 h-4 w-4" />
                                 <span>Usage</span>
                             </Link>
                         </DropdownMenuItem>

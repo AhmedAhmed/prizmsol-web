@@ -13,7 +13,7 @@ export default function BackButton({
         router.back();
     }
     return (
-        <Button variant="ghost" onClick={goBack} className={className}>
+        <Button variant="ghost" size="icon" onClick={goBack} className={`${className} rounded-full curspor-pointer`}>
             <ArrowLeftIcon className="h-4" />
         </Button>
     );

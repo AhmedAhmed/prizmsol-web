@@ -111,13 +111,23 @@ export default function Message({
                             if (state == "call" || state == "input-available" || state == "input-streaming") {
                                 if (toolName == "createDocumentTool") {
                                     return (
-                                        <div key={index} className="flex items-center gap-2.5">
-                                            <div className="flex flex-col items-center h-7 relative overflow-hidden">
-                                                <div className="absolute left-0 top-0 z-10 h-full w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-50/80 dark:via-neutral-950 to-transparent animate-[shimmer_1.5s_infinite]"></div>
-                                                <span className="flex flex-1 text-sm text-neutral-500 dark:text-neutral-400 min-h-[calc(100vh-18px)]">Creating Document...</span>
+                                        <Button
+                                            variant="outline"
+                                            key={index}
+                                            className="h-auto justify-start gap-2.5 self-start mb-2.5"
+                                            onClick={handleArtifactClick(result?.id)}
+                                        >
+                                            <div className="mt-0.5 self-start text-sm font-semibold text-muted-foreground">
+                                                {args.kind == "code" && <CodeIcon className="h-5 w-5" />}
+                                                {args.kind == "text" && <FileTextIcon className="h-5 w-5" />}
+                                                {args.kind == "sheet" && <TableIcon className="h-5 w-5" />}
                                             </div>
-                                        </div>
-                                    );
+                                            <div className="flex flex-1 self-start flex-col gap-1">
+                                                <span className="text-sm text-muted-foreground text-start text-balance line-clamp-2">
+                                                    {artifact.status == "streaming" ? `Creating "${args.title}"` || "Creating document" : `Created "${args.title}"` || "Created document"}
+                                                </span>
+                                            </div>
+                                        </Button>                                    );
                                 }
 
                                 if (toolName == "webSearchTool") {
