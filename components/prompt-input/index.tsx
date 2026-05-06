@@ -425,7 +425,7 @@ export default function PromptInput({
                     <PromptTextarea
                         textareaRef={textareaRef}
                         className={className}
-                        placeholder={placeholder || "Assign a task or ask anything..."}
+                        placeholder={placeholder || "Ask Prizmsol to build you an AI Chatbot..."}
                         name="prompt"
                         value={input}
                         onChange={handleTextChange}
