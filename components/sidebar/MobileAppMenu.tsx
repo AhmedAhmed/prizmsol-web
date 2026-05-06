@@ -72,7 +72,7 @@ export default function MobileAppMenu({
             <SimpleBar className="w-[50px]">
                 <div className="flex flex-col justify-between items-center h-[calc(100vh-10px)]">
                     <div className="flex flex-col items-center lg:items-start h-full">
-                        <SimpleTooltip text="PrizmSol" side="right">
+                        <SimpleTooltip text="Prizmsol" side="right">
                             <Link href="/" className="flex pb-2.5 pt-3.5 justify-center items-center justify-self-center self-center h-[34px] w-[34px]">
                                 <LogoIcon className="h-[18px]" />
                             </Link>
@@ -95,7 +95,7 @@ export default function MobileAppMenu({
                                                 <ArrowRightFromLine size={24} />
                                             </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent>
+                                        <TooltipContent side="right">
                                             <span>Collapse</span>
                                         </TooltipContent>
                                     </Tooltip>

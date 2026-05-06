@@ -1,29 +1,16 @@
-import { SVGProps } from "react";
-
-const LogoIcon = (props: SVGProps<SVGSVGElement>) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 25 18"
-        fill="none"
-        {...props}
-    >
-        <path
-            className="fill-blue-600"
-            fillRule="evenodd"
-            d="m9 0 9 18H0L9 0Z"
-            clipRule="evenodd"
-        />
-        <path
-            className="fill-emerald-500"
-            fillRule="evenodd"
-            d="m15.218 0 9 18h-18l9-18Z"
-            clipRule="evenodd"
-        />
-        <path
-            className="fill-black dark:fill-white"
-            d="M18 18H6.218l5.89-11.782L18 18Z"
-        />
-    </svg>
+import * as React from "react"
+const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 48 48"
+    fill="none"
+    {...props}
+  >
+    <rect width={48} height={48} fill="#00BB79" rx={8} />
+    <path
+      fill="#000"
+      d="M10.45 42c-.767-.867-1.15-1.933-1.15-3.2 1.133 0 1.933-.183 2.4-.55.5-.367.75-1.017.75-1.95V12.8c0-.933-.25-1.583-.75-1.95-.467-.4-1.267-.6-2.4-.6 0-.567.1-1.117.3-1.65.2-.567.467-1.067.8-1.5 3.267 0 5.883-.05 7.85-.15 1.967-.133 3.65-.2 5.05-.2 3.533 0 6.333.433 8.4 1.3 2.1.867 3.6 2.15 4.5 3.85.933 1.667 1.4 3.717 1.4 6.15 0 2.167-.55 4.133-1.65 5.9-1.067 1.767-2.7 3.167-4.9 4.2-2.167 1-4.933 1.5-8.3 1.5h-2.1v4.4c0 1.3.133 2.3.4 3 .3.667.85 1.133 1.65 1.4.8.233 1.933.35 3.4.35 0 1.3-.367 2.367-1.1 3.2H10.45Zm11.5-16.35c1.567 0 2.8-.233 3.7-.7.933-.5 1.633-1.133 2.1-1.9.467-.767.767-1.6.9-2.5.167-.933.25-1.817.25-2.65 0-1.267-.2-2.45-.6-3.55a5.193 5.193 0 0 0-1.95-2.65c-.9-.667-2.183-1-3.85-1-.733 0-1.35.067-1.85.2v14.65c.233.033.45.067.65.1h.65Z"
+    />
+  </svg>
 )
 export default LogoIcon;
-
