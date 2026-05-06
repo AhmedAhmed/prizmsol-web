@@ -36,7 +36,7 @@ export default function Greeting() {
             ease: [0.22, 1, 0.36, 1],
         }}>
             <LogoIcon className="self-center h-10 w-10 mb-10" />
-            <h1 className="flex text-xl lg:text-3xl font-bold mb-8">{renderText()}</h1>
+            <h1 className="flex text-xl lg:text-3xl mb-8">{renderText()}</h1>
         </motion.div>
     );
 }
