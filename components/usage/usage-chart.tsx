@@ -132,7 +132,7 @@ export function UsageChart() {
               <CartesianGrid strokeDasharray="3 3" stroke="#737373" />
               <XAxis dataKey="label" />
               <YAxis tickFormatter={(value) => `$${Number(value).toFixed(0)}`} />
-              <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+              <Tooltip formatter={(value: any) => `$${Number(value)?.toFixed(2)}`} />
               <Area
                 type="monotone"
                 dataKey="cumulative"

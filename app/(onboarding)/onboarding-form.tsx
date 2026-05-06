@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { onboardingAction, updatePortfolioAction } from "./action";
+import { OnboardingFormState } from "./definitions";
 
 export default function OnboardingForm({
     portfolio,
@@ -15,15 +16,25 @@ export default function OnboardingForm({
     portfolio: any;
     edit?: boolean;
 }) {
-    const [state, action] = useActionState(edit ? updatePortfolioAction : onboardingAction, undefined);
+    const [state, action, isPending] = useActionState<OnboardingFormState, FormData>(edit ? updatePortfolioAction : onboardingAction, undefined);
     const router = useRouter();
 
     useEffect(() => {
-        if (state?.status == 200) {
-            toast.success("Settings saved successfully");
-            router.push("/");
+        if (isPending) {
+            toast.loading("Saving portfolio...");
+        } else if (state?.status == 200) {
+            toast.success("Portfolio saved successfully");
+            setTimeout(() => {
+                toast.dismiss();
+                router.push("/");
+            }, 1000);
+        } else if (state?.status == 400) {
+            toast.error("Failed to save portfolio. Please try again.");
+            setTimeout(() => {
+                toast.dismiss();
+            }, 1000);
         }
-    }, [state, router]);
+    }, [state, router, isPending, toast]);
 
     return (
         <form className="flex flex-col gap-5 mx-auto w-full max-w-xl" action={action}>
