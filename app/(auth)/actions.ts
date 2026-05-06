@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { emailRatelimit } from "@/lib/ratelimit";
 import { headers } from "next/headers";
 import { z } from "zod";
 
@@ -36,6 +37,12 @@ export const sendOtp = async (
     }
 
     const email = parsed.data.email.toLowerCase().trim();
+
+    // rate limit the number of emails sent per minute
+    const rateLimit = await emailRatelimit.limit(email as string);
+    if (!rateLimit.success) {
+      return { status: "failed" };
+    }
 
     await auth.api.sendVerificationOTP({
       body: { email, type: "sign-in" },
