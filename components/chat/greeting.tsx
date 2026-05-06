@@ -14,7 +14,9 @@ export default function Greeting() {
     const renderText = () => {
         // based on time of day.
         const hours = new Date().getHours();
-        if (hours < 12) {
+        if (hours >= 0 && hours < 5) {
+            return "Late Night Session";
+        } else if (hours < 12) {
             return "Good Morning";
         } else if (hours < 18) {
             return "Good Afternoon";

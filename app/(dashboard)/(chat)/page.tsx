@@ -40,7 +40,7 @@ export default async function NewPage({
             <div className="flex flex-col gap-10 flex-1 w-full max-w-7xl">
                 <div className="flex flex-1 flex-col justify-center w-full">
                     <Link href="/pricing" className="mb-5 flex self-center justify-self-center gap-2">
-                        <AnimatedBadge text="Introducing Prizm v2" />
+                        <AnimatedBadge text="Introducing Prizm v1" />
                     </Link>
                     <Greeting />
                     {renderError()}
