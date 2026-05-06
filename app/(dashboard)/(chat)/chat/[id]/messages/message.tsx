@@ -115,7 +115,7 @@ export default function Message({
                                             variant="outline"
                                             key={index}
                                             className="h-auto justify-start gap-2.5 self-start mb-2.5"
-                                            onClick={handleArtifactClick(result?.id)}
+                                            onClick={handleArtifactClick(args?.id)}
                                         >
                                             <div className="mt-0.5 self-start text-sm font-semibold text-muted-foreground">
                                                 {args.kind == "code" && <CodeIcon className="h-5 w-5" />}
