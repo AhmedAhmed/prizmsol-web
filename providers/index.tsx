@@ -1,4 +1,3 @@
-import PlayerProvider from "./player-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NProgressProvider from "./nprogress-provider";

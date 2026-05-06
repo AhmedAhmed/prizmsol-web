@@ -65,7 +65,7 @@ export default async function PricingPage({
         description: product.description ?? "Paid subscription plan",
         recurringPrice: formatPlanPrice(price.unit_amount, price.recurring?.interval ?? null),
         creditCap,
-        isRecommended: product.name.toLowerCase().includes("pro"),
+        isRecommended: product.name.toLowerCase().includes("plus"),
         // Match the plan key returned by the API against the plan identifier
         isCurrentPlan: currentPlan === plan,
       };

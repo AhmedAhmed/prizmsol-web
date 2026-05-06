@@ -13,15 +13,26 @@ export default function GeneralSettingsForm({
 }: {
     user: any;
 }) {
-    const [state, action] = useActionState(settingsAction, undefined);
+    const [state, action, isPending] = useActionState(settingsAction, undefined);
     const router = useRouter();
 
+
     useEffect(() => {
-        if (state?.status == 200) {
+        if (isPending) {
+            toast.loading("Saving settings...");
+        } else if (state?.status == 200) {
             toast.success("Settings saved successfully");
-            router.refresh();
+            setTimeout(() => {
+                toast.dismiss();
+                router.refresh();
+            }, 1000);
+        } else if (state?.status == 400) {
+            toast.error("Something went wrong. Please try again.");
+            setTimeout(() => {
+                toast.dismiss();
+            }, 1000);
         }
-    }, [state, router]);
+    }, [isPending, state, router, toast]);
 
     return (
         <form className="flex flex-col gap-5 mx-auto w-full max-w-xl" action={action}>

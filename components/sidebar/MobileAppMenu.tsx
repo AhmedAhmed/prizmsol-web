@@ -59,11 +59,9 @@ export default function MobileAppMenu({
                             </Link>
                         </Button>
                     </TooltipTrigger>
-                    <TooltipPortal>
-                        <TooltipContent side="right">
-                            <span>{name}</span>
-                        </TooltipContent>
-                    </TooltipPortal>
+                    <TooltipContent side="right">
+                        <span>{name}</span>
+                    </TooltipContent>
                 </Tooltip>
             </li>
         );
@@ -84,7 +82,7 @@ export default function MobileAppMenu({
                                 className={`hidden lg:flex flex-1 justify-start items-center z-40 w-full`}
                             >
                                 <div
-                                    className={`flex flex-1 justify-between relative items-center gap-3`}
+                                    className={`flex flex-1 h-[34px] justify-between relative items-center gap-3`}
                                 >
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -97,11 +95,9 @@ export default function MobileAppMenu({
                                                 <ArrowRightFromLine size={24} />
                                             </Button>
                                         </TooltipTrigger>
-                                        <TooltipPortal>
-                                            <TooltipContent side="right">
-                                                <span>Collapse</span>
-                                            </TooltipContent>
-                                        </TooltipPortal>
+                                        <TooltipContent>
+                                            <span>Collapse</span>
+                                        </TooltipContent>
                                     </Tooltip>
                                 </div>
                             </li>

@@ -89,11 +89,9 @@ export default function AppMenu({
                             </Link>
                         </Button>
                     </TooltipTrigger>
-                    <TooltipPortal>
-                        <TooltipContent className="flex lg:hidden" side="right">
-                            <span>{name}</span>
-                        </TooltipContent>
-                    </TooltipPortal>
+                    <TooltipContent className="flex lg:hidden" side="right">
+                        <span>{name}</span>
+                    </TooltipContent>
                 </Tooltip>
             </li>
         );
@@ -104,7 +102,7 @@ export default function AppMenu({
             <SimpleBar className="w-[50px] lg:w-[250px]">
                 <div className="flex flex-col justify-between items-center lg:items-start h-[calc(100vh-10px)]">
                     <div className="flex flex-col gap-2 w-full">
-                        <Link href="/" className="flex lg:self-start cursor-default flex-col gap-2 px-2 lg:px-5 py-2.5 relative group/pill overflow-hidden hover:opacity-100">
+                        <Link href="/" className="flex lg:self-start cursor-default flex-col gap-2 px-2 lg:px-4 py-2.5 relative group/pill overflow-hidden hover:opacity-100 h-[40px] w-full justify-center items-start">
                             <div className="absolute left-0 top-0 z-10 h-[72px] w-full -translate-x-full bg-linear-to-r from-transparent via-neutral-100/80 dark:via-black to-transparent group-hover/pill:animate-[shimmer_1.5s]"></div>
                             <Logo className="hidden lg:flex h-[22px]" />
                             <LogoIcon className="h-[18px] lg:hidden" />
@@ -128,11 +126,9 @@ export default function AppMenu({
                                                 <ArrowLeftFromLine size={24} />
                                             </Button>
                                         </TooltipTrigger>
-                                        <TooltipPortal>
-                                            <TooltipContent side="right">
-                                                <span>Collapse</span>
-                                            </TooltipContent>
-                                        </TooltipPortal>
+                                        <TooltipContent side="right">
+                                            <span>Collapse</span>
+                                        </TooltipContent>
                                     </Tooltip>
                                 </div>
                             </li>

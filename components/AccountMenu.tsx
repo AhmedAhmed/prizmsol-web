@@ -88,23 +88,6 @@ export default function AccountMenu({
         toast.success("You have been logged out successfully");
     }
 
-    const handleCancelPlan = async () => {
-        try {
-            setIsCancelling(true);
-            const response = await fetch("/api/stripe/subscription/cancel", { method: "POST" });
-            if (!response.ok) {
-                toast.error("Unable to cancel plan");
-                return;
-            }
-            setCancelAtPeriodEnd(true);
-            toast.success("Plan will be cancelled at end of billing period.");
-        } catch (_error) {
-            toast.error("Unable to cancel plan");
-        } finally {
-            setIsCancelling(false);
-        }
-    };
-
     const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
     return (
@@ -133,51 +116,11 @@ export default function AccountMenu({
                 <DropdownMenuContent align="start" className="w-[300px]">
                     <DropdownMenuLabel className="flex items-center gap-2">
                         <div className="flex flex-col">
-                            <span className="text-md">{name}</span>
-                            {user?.email && <span className="flex text-md font-normal">{user.email}</span>}
+                            <span className="text-md text-black dark:text-white">{name}</span>
+                            {user?.email && <span className="flex text-md font-normal text-black dark:text-white">{user.email}</span>}
                             <span className="text-xs text-neutral-500 dark:text-neutral-400">{capitalize(plan)} Plan</span>
                         </div>
                     </DropdownMenuLabel>
-                    <div className="mx-2 rounded-xl border border-neutral-200 bg-neutral-100 p-3 dark:border-neutral-800 dark:bg-neutral-900">
-                        <div className="mb-3 flex items-center justify-between">
-                            <span className="text-sm font-semibold">Balance</span>
-                            <Link
-                                href="/pricing"
-                                className="rounded-lg bg-black px-3 py-0.5 text-sm font-medium text-white dark:bg-white dark:text-black"
-                            >
-                                Upgrade
-                            </Link>
-                        </div>
-                        <div className="space-y-1 text-sm">
-                            <div className="flex items-center justify-between">
-                                <span className="text-neutral-500 dark:text-neutral-400">Total</span>
-                                <span className="font-semibold">{totalCredits.toLocaleString()} credits</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-neutral-500 dark:text-neutral-400">Remaining</span>
-                                <span className="font-semibold">{remainingCredits.toLocaleString()}</span>
-                            </div>
-                        </div>
-                        {plan !== "free" ? (
-                            cancelAtPeriodEnd ? (
-                                <div className="mt-3 flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
-                                    <ClockIcon className="h-3.5 w-3.5 shrink-0" />
-                                    Cancellation scheduled — active until end of billing period.
-                                </div>
-                            ) : (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="mt-3 w-full"
-                                    onClick={handleCancelPlan}
-                                    disabled={isCancelling}
-                                >
-                                    {isCancelling ? "Cancelling..." : "Cancel plan"}
-                                </Button>
-                            )
-                        ) : null}
-                    </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                         <DropdownMenuItem asChild>

@@ -1,10 +1,10 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { generateId } from "ai";
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 import { genSaltSync, hashSync } from "bcrypt-ts";
 
 export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs))
 }
 
 

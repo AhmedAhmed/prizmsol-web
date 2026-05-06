@@ -1,9 +1,12 @@
 import Providers from "@/providers";
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Inter } from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "sonner";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -18,7 +21,7 @@ export default async function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" suppressHydrationWarning>
+        <html lang="en" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
             <body
                 className={`${geist.className} dark:bg-neutral-900 bg-neutral-50 text-black relative dark:text-white flex min-h-full flex-col antialiased selection:bg-emerald-300 selection:text-emerald-900`}
             >

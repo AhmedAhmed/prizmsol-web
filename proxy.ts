@@ -1,17 +1,33 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { ratelimit } from "@/lib/ratelimit";
 
 export async function proxy(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
+  const { success, limit, remaining, reset } = await ratelimit.limit(ip as string);
+
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { 
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": remaining.toString(),
+          "X-RateLimit-Reset": reset.toString(),
+        }
+      }
+    );
+  }
+
   const url = request.nextUrl;
   const hostname = request.headers.get("host") || "";
   const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-  const rootDomain =
-    process.env.DOMAIN || "localhost:3000";
+  const rootDomain = process.env.DOMAIN || "localhost:3000";
 
   // Extract subdomain
   let subdomain: string | null = null;
-
   if (hostname.endsWith(`.${rootDomain}`)) {
     subdomain = hostname.replace(`.${rootDomain}`, "");
   }
@@ -25,7 +41,6 @@ export async function proxy(request: NextRequest) {
       `/site/${subdomain}${url.pathname}`,
       request.url
     );
-
     return NextResponse.rewrite(rewriteUrl);
   }
 
@@ -34,7 +49,6 @@ export async function proxy(request: NextRequest) {
   });
 
   const isLoggedIn = !!session;
-
   const isAuthPage = ["/login", "/verify"].includes(url.pathname);
   const isPublicPage = ["/pricing", "/home"].includes(url.pathname);
   const isStripeApiPath = url.pathname.startsWith("/api/stripe/");
@@ -43,9 +57,7 @@ export async function proxy(request: NextRequest) {
     if (isAuthPage || isPublicPage || isStripeApiPath) {
       return NextResponse.next();
     }
-
     const redirectUrl = encodeURIComponent(url.pathname);
-
     return NextResponse.redirect(
       new URL(`${base}/login?redirectUrl=${redirectUrl}`, request.url)
     );
