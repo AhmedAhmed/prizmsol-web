@@ -86,10 +86,10 @@ export const verifyOtp = async (
     const otp = parsed.data.otp.trim();
 
     await auth.api.signInEmailOTP({
-      body: { 
+      body: {
         email,
         type: "sign-in",
-        otp 
+        otp
       },
       headers: await headers(),
     });

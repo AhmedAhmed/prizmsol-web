@@ -9,7 +9,7 @@ export async function proxy(request: NextRequest) {
   if (!success) {
     return NextResponse.json(
       { error: "Too many requests" },
-      { 
+      {
         status: 429,
         headers: {
           "X-RateLimit-Limit": limit.toString(),

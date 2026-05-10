@@ -2,10 +2,8 @@
 import {
     BarChartIcon,
     ChevronsUpDownIcon,
-    ClockIcon,
     CreditCardIcon,
     Layers,
-    LayoutDashboardIcon,
     LifeBuoyIcon,
     LockIcon,
     LogOutIcon,
@@ -31,7 +29,6 @@ import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { ModeToggle } from "./ui/mode-toggle";
@@ -51,27 +48,7 @@ export default function AccountMenu({
     };
     showName?: boolean;
 }) {
-    const initialPlan = accountSnapshot?.plan ?? user?.plan ?? "free";
-    const initialLimit = accountSnapshot?.limit ?? 0;
-    const initialRemaining = accountSnapshot?.remaining ?? 0;
-
-    const [plan, setPlan] = useState<string>(initialPlan);
-    const [totalCredits, setTotalCredits] = useState<number>(Math.round(initialLimit * 100));
-    const [remainingCredits, setRemainingCredits] = useState<number>(Math.max(0, Math.round(initialRemaining * 100)));
-    const [isCancelling, setIsCancelling] = useState(false);
-    const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState<boolean>(
-        accountSnapshot?.cancelAtPeriodEnd ?? false
-    );
-    const [portfolio, setPortfolio] = useState<any>(null);
-
-    useEffect(() => {
-        fetch(`/api/portfolio`)
-            .then(res => res.json())
-            .then(data => {
-                const { portfolio: p } = data;
-                setPortfolio(p);
-            });
-    }, []);
+    const plan = accountSnapshot?.plan ?? user?.plan ?? "free";
 
     const name = user?.name || "Unknown User";
     const getInitials = (name: string) => {
@@ -127,12 +104,6 @@ export default function AccountMenu({
                             <Link href="/" className="flex items-center w-full">
                                 <Layers className="mr-2 h-4 w-4" />
                                 <span>Home</span>
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link href={`http://${portfolio?.vanity}.${process.env.NEXT_PUBLIC_DOMAIN}`} target="_blank" className="flex items-center w-full">
-                                <LayoutDashboardIcon className="mr-2 h-4 w-4" />
-                                <span>Portfolio</span>
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>

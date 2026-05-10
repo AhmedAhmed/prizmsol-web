@@ -1,5 +1,4 @@
 import AnimatedBadge from "@/components/AnimatedBadge";
-import LogoIcon from "@/components/logoIcon";
 import { getCollections, getMessagesCountByUserId } from "@/lib/db/queries";
 import { AlertTriangleIcon } from "lucide-react";
 import Link from "next/link";

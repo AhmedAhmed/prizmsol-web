@@ -4,12 +4,11 @@ import { isEmpty } from "lodash";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 export default async function SettingsPage() {
     const session = await auth.api.getSession({
         headers: await headers() // you need to pass the headers object.
-    }); 
+    });
     const user = session?.user;
     if (isEmpty(user)) {
         redirect("/");

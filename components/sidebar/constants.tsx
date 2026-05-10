@@ -5,7 +5,7 @@ import {
     HistoryIcon,
     KeyRoundIcon,
     LayersIcon,
-    PenLineIcon,
+    MessageCircleHeart,
     PlusIcon,
     SettingsIcon,
 } from "lucide-react";
@@ -17,6 +17,11 @@ export const appMenuItems = [
         href: "/",
         newChat: true,
     },
+    // {
+    //     name: "Agents",
+    //     icon: MessageCircleHeart,
+    //     href: "/agents",
+    // },
     {
         name: "History",
         icon: HistoryIcon,
@@ -31,11 +36,6 @@ export const appMenuItems = [
         name: "Usage",
         icon: BarChart3Icon,
         href: "/usage",
-    },
-    {
-        name: "Portfolio",
-        icon: PenLineIcon,
-        href: "/portfolio",
     },
     {
         name: "Settings",
