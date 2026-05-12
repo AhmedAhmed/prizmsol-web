@@ -1,12 +1,13 @@
+import { cn } from "@/lib/utils";
 import Providers from "@/providers";
+import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Geist, Inter } from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -27,6 +28,7 @@ export default async function RootLayout({
             >
                 <Suspense>
                     <Providers>
+                        <Analytics />
                         <div className="flex flex-col min-h-screen bg-neutral-100 dark:bg-black">
                             {children}
                         </div>
