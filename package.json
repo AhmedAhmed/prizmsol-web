@@ -88,6 +88,7 @@
     "@types/request-ip": "^0.0.41",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.3.3",
     "@vercel/functions": "^2.0.3",
     "@webcontainer/api": "^1.5.3",
