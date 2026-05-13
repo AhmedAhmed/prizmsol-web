@@ -26,9 +26,9 @@ export default function ChatItem({
         <li className="flex flex-1 w-full">
             <Link
                 href={`/chat/${id}`}
-                className="flex flex-col flex-1 hover:bg-neutral-100 dark:hover:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 p-2.5 rounded-md"
+                className="flex flex-col flex-1 hover:bg-neutral-100 dark:hover:bg-neutral-900/70 border border-neutral-200 dark:border-neutral-900 p-2.5 rounded-md"
             >
-                <h6 className="text-sm font-semibold">{title}</h6>
+                <h6 className="text-sm text-neutral-800 dark:text-neutral-300 font-semibold">{title}</h6>
                 <span className="text-sm font-normal text-neutral-500 dark:text-neutral-500">{now}</span>
             </Link>
         </li>

@@ -2,7 +2,7 @@
 
 import { title_prompt } from "@/lib/ai/prompts";
 import { auth } from "@/lib/auth";
-import { addToCollection, saveChat, saveMessages } from "@/lib/db/queries";
+import { saveChat, saveMessages } from "@/lib/db/queries";
 import { gateway } from "@ai-sdk/gateway";
 
 import { generateText } from "ai";
@@ -29,7 +29,6 @@ export async function submitMessage(formData: FormData) {
     }
 
     const content = formData.get("prompt") as string;
-    const collection = formData.get("collection") as string;
     const id = uuid();
     const mid = uuid();
 
@@ -70,19 +69,6 @@ export async function submitMessage(formData: FormData) {
             error: "Message not created",
         };
     }
-
-    // @TODO: save into collection
-    if (collection !== "0") {
-        const collResult = await addToCollection({
-            collectionId: collection,
-            chatId: id
-        });
-
-        if (collResult.count == 0) {
-            console.warn("Error when saving to collection");
-        }
-    }
-
 
     return {
         success: true,

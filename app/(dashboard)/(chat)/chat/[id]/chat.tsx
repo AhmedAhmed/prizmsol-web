@@ -1,6 +1,6 @@
 "use client";
 import Artifact, { ArtifactData } from "@/components/artifact";
-import PromptInput from "@/components/prompt-input";
+import PromptInput from "@/components/chat/prompt-input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useArtifact } from "@/hooks/use-artifact";
 import { useSidebar } from "@/hooks/use-sidebar";
@@ -160,7 +160,7 @@ export default function Chat({
     }
 
     return (
-        <div className={cn("flex flex-col flex-1 w-full max-w-[calc(100vw-70px)] h-[calc(100vh-25px)] lg:max-w-[calc(100vw-265px)] overflow-hidden", {              
+        <div className={cn("flex flex-col flex-1 w-full max-w-[calc(100vw-70px)] h-[calc(100vh-25px)] lg:max-w-[calc(100vw-265px)] overflow-hidden", {
             "max-w-[calc(100vw-60px)] lg:max-w-[calc(100vw-265px)]": isExpanded,
             "max-w-[calc(100vw-60px)] lg:max-w-[calc(100vw-60px)]": !isExpanded,
         })}>

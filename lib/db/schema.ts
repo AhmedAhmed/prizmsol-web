@@ -6,6 +6,7 @@ import {
     integer,
     json,
     pgTable,
+    real,
     text,
     timestamp,
     uuid,
@@ -159,24 +160,6 @@ export const Likes = pgTable("likes", {
 
 export type Like = InferSelectModel<typeof Likes>;
 
-export const Collections = pgTable("collections", {
-    id: uuid("id").primaryKey().notNull().defaultRandom(),
-    name: varchar("name").notNull(),
-    description: varchar("description").default(""),
-    createdAt: timestamp("createdAt").notNull(),
-});
-
-export type Collection = InferSelectModel<typeof Collections>;
-
-export const CollectionItems = pgTable("collection_items", {
-    id: uuid("id").primaryKey().notNull().defaultRandom(),
-    collectionId: uuid("collectionId").notNull().references(() => Collections.id),
-    chatId: uuid("chatId").notNull().references(() => chat.id),
-    createdAt: timestamp("createdAt").notNull(),
-});
-
-export type CollectionItem = InferSelectModel<typeof CollectionItems>;
-
 export const aiCreditUsageEvent = pgTable("ai_credit_usage_events", {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     userId: text("userId").notNull().references(() => user.id),
@@ -211,6 +194,26 @@ export const portfolio = pgTable("portfolio", {
 
 export type Portfolio = InferSelectModel<typeof portfolio>;
 
+// ─── Agents ──────────────────────────────────────────────────────────────────
+
+export const agents = pgTable("agents", {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    name: text("name"),
+    displayName: text("display_name"),
+    initialMessage: text("initial_message"),
+    dismissalMessage: text("dismissal_message"),
+    systemPrompt: text("system_prompt"),
+    model: text("model"),
+    temperature: real("temperature"),
+    isPrivate: boolean("is_private").default(false),
+    vanity: text("vanity").unique(),
+    description: text("description"),
+    userId: text("user_id").references(() => user.id),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type Agent = InferSelectModel<typeof agents>;
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -219,6 +222,7 @@ export const userRelations = relations(user, ({ many }) => ({
     messages: many(message),
     aiCreditUsageEvents: many(aiCreditUsageEvent),
     sources: many(sources),
+    agents: many(agents),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({

@@ -1,6 +1,5 @@
 "use client";
-import PromptInput from "@/components/prompt-input";
-import { Collection } from "@/lib/db/schema";
+import PromptInput from "@/components/chat/prompt-input";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { submitMessage } from "./actions";
@@ -8,11 +7,9 @@ import { submitMessage } from "./actions";
 export default function ChatPrompt({
     count,
     defaultPrompt,
-    collections
 }: {
     count: number;
     defaultPrompt: string;
-    collections: Array<Collection>;
 }) {
     const router = useRouter();
 
@@ -32,7 +29,6 @@ export default function ChatPrompt({
             action={handleSubmit}
             messagesCount={count}
             defaultValue={defaultPrompt}
-            collections={collections}
         />
     );
 }

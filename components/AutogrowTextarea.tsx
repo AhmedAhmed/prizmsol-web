@@ -38,7 +38,7 @@ export default function AutogrowTextarea({ isSubmitting, shouldClear, ...props }
         {...props}
         ref={textareaRef}
         className={
-            cn("w-full p-3 border border-neutral-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[50px] overflow-hidden resize-none", props.className)
+            cn("w-full p-3 border border-neutral-300 dark:border-neutral-700 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500 min-h-[50px] overflow-hidden resize-none", props.className)
         }
     />;
 }

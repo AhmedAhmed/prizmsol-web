@@ -1,5 +1,5 @@
 import AnimatedBadge from "@/components/AnimatedBadge";
-import { getCollections, getMessagesCountByUserId } from "@/lib/db/queries";
+import { getMessagesCountByUserId } from "@/lib/db/queries";
 import { AlertTriangleIcon } from "lucide-react";
 import Link from "next/link";
 import ChatPrompt from "./form";
@@ -17,8 +17,6 @@ export default async function NewPage({
     const query = await searchParams;
 
     const count = await getMessagesCountByUserId();
-
-    const collections = await getCollections();
 
     const renderError = () => {
         if (query.error == "incomplete") {
@@ -43,7 +41,7 @@ export default async function NewPage({
                     </Link>
                     <Greeting />
                     {renderError()}
-                    <ChatPrompt collections={collections} count={count} defaultPrompt={query.prompt as string} />
+                    <ChatPrompt count={count} defaultPrompt={query.prompt as string} />
                 </div>
                 <div className="flex justify-between items-center py-2.5">
                     <div className="flex gap-1 items-center justify-center text-neutral-500">

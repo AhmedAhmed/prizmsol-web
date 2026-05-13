@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/tooltip";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { ArrowRightFromLine } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,6 +14,7 @@ import AccountMenu from "../AccountMenu";
 import LogoIcon from "../logoIcon";
 import SimpleTooltip from "../simple-tooltip";
 import { appMenuItems, loggedOutMenuItems } from "./constants";
+
 export default function MobileAppMenu({
     onClickHandler,
 }: {

@@ -2,7 +2,7 @@ import 'server-only';
 
 import { and, asc, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { db } from './drizzle';
-import { aiCreditUsageEvent, chat, CollectionItems, Collections, DBMessage, Documents, Likes, message, portfolio, user, User } from './schema';
+import { Agent, agents, aiCreditUsageEvent, chat, DBMessage, Documents, Likes, message, portfolio, user, User } from './schema';
 
 export async function getUser(email: string): Promise<User[]> {
     try {
@@ -495,146 +495,6 @@ export async function GetLike({
     }
 }
 
-export async function saveCollection({
-    name,
-    description
-}: {
-    name: string;
-    description: string;
-}) {
-    try {
-        return await db.insert(Collections).values({
-            name: name,
-            description: description,
-            createdAt: new Date()
-        });
-    } catch (error) {
-        console.error('Failed to save collection in database');
-        throw error;
-    }
-}
-
-export async function updateCollectionDataById({
-    id,
-    name,
-    description
-}: {
-    id: string;
-    name: string;
-    description: string;
-}) {
-    try {
-        return await db.update(Collections).set({ name, description }).where(eq(Collections.id, id));
-    } catch (error) {
-        console.error('Failed to update collection data in database');
-        throw error;
-    }
-}
-
-export async function deleteCollection({
-    id
-}: {
-    id: string;
-}) {
-    try {
-        await db.delete(CollectionItems).where(eq(CollectionItems.collectionId, id))
-        return await db.delete(Collections).where(eq(Collections.id, id));
-    } catch (error: any) {
-        console.log("Failed to delete collection in database");
-        throw error;
-    }
-}
-
-export async function getCollections() {
-    try {
-        return await db.select().from(Collections);
-    } catch (error: any) {
-        console.log("Failed to fetch collections");
-        throw error;
-    }
-}
-
-export async function getCollection({
-    id
-}: {
-    id: string;
-}) {
-    try {
-        const [selectedCollection] = await db.select().from(Collections).where(eq(Collections.id, id));
-        return selectedCollection;
-    } catch (error: any) {
-        console.log("Failed to fetch the collection");
-        throw error;
-    }
-}
-
-export async function addToCollection({
-    collectionId,
-    chatId
-}: {
-    collectionId: string;
-    chatId: string;
-}) {
-    try {
-        return await db.insert(CollectionItems).values({
-            collectionId: collectionId,
-            chatId: chatId,
-            createdAt: new Date(),
-        });
-    } catch (error: any) {
-        console.log("Failed to add chat to the collection");
-        throw error;
-    }
-}
-
-export async function removeFromCollection({
-    chatId,
-    collectionId
-}: {
-    chatId: string;
-    collectionId: string;
-}) {
-    try {
-        return await db.delete(CollectionItems).where(
-            and(
-                eq(CollectionItems.id, collectionId),
-                eq(chat.id, chatId)
-            )
-        )
-    } catch (error: any) {
-        console.log("Failed to remove chat from collection");
-        throw error;
-    }
-}
-
-export async function getChatsFromCollection({
-    id
-}: {
-    id: string;
-}) {
-    try {
-        return await db
-            .select({
-                id: chat.id,
-                title: chat.title,
-                visibility: chat.visibility,
-                isDeleted: chat.isDeleted,
-                createdAt: chat.createdAt,
-            })
-            .from(chat)
-            .innerJoin(CollectionItems, eq(chat.id, CollectionItems.chatId))
-            .where(
-                and(
-                    eq(CollectionItems.collectionId, id),
-                    eq(chat.isDeleted, false)
-                )
-            );
-    } catch (error: any) {
-        console.log("Failed to remove chat from collection");
-        throw error;
-    }
-}
-
 export async function getPortfolioVanity(vanity: string) {
     try {
         const [selectedPortfolio] = await db
@@ -732,6 +592,78 @@ export async function updatePortfolio({
         }).where(eq(portfolio.userId, userId));
     } catch (error) {
         console.error('Failed to save portfolio in database');
+        throw error;
+    }
+}
+
+export async function saveAgent({
+    name,
+    displayName,
+    description,
+    userId,
+}: {
+    name: string;
+    displayName: string;
+    description: string;
+    userId: string | null;
+}) {
+    try {
+        return await db.insert(agents).values({
+            name,
+            displayName,
+            description,
+            userId,
+            createdAt: new Date(),
+        });
+    } catch (error) {
+        console.error('Failed to save agent in database');
+        throw error;
+    }
+}
+
+export async function getAgents({ userId }: { userId: string }): Promise<Agent[]> {
+    try {
+        return await db.select().from(agents).where(eq(agents.userId, userId));
+    } catch (error: any) {
+        console.log("Failed to fetch agents");
+        throw error;
+    }
+}
+
+export async function getAgentById({ id }: { id: string }): Promise<Agent | null> {
+    try {
+        const [selectedAgent] = await db.select().from(agents).where(eq(agents.id, id));
+        return selectedAgent ?? null;
+    } catch (error: any) {
+        console.log("Failed to fetch the agent");
+        throw error;
+    }
+}
+
+export async function updateAgentById({
+    id,
+    name,
+    displayName,
+    description,
+}: {
+    id: string;
+    name: string;
+    displayName: string;
+    description: string;
+}) {
+    try {
+        return await db.update(agents).set({ name, displayName, description }).where(eq(agents.id, id));
+    } catch (error) {
+        console.error('Failed to update agent data in database');
+        throw error;
+    }
+}
+
+export async function deleteAgent({ id }: { id: string }) {
+    try {
+        return await db.delete(agents).where(eq(agents.id, id));
+    } catch (error: any) {
+        console.log("Failed to delete agent in database");
         throw error;
     }
 }

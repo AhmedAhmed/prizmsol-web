@@ -5,17 +5,16 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { TooltipPortal } from "@radix-ui/react-tooltip";
 import { ArrowLeftFromLine } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SimpleBar from "simplebar-react";
+import AccountMenu from "../AccountMenu";
 import Logo from "../logo";
 import LogoIcon from "../logoIcon";
 import { appMenuItems, loggedOutMenuItems } from "./constants";
-import AccountMenu from "../AccountMenu";
-import { authClient } from "@/lib/auth-client"
 
 export default function AppMenu({
     chats,
@@ -35,7 +34,7 @@ export default function AppMenu({
 }) {
     const pathname = usePathname();
     const isLoggedOut = false;
-    const {data: session } = authClient.useSession()
+    const { data: session } = authClient.useSession()
     const user = session?.user ?? initialUser;
 
     const menuItems = !isLoggedOut ? appMenuItems : loggedOutMenuItems;
@@ -62,7 +61,7 @@ export default function AppMenu({
                             className={cn(
                                 `flex flex-1 cursor-pointer group/pill h-[34px] justify-start items-center relative border border-transparent hover:border-neutral-300 dark:hover:border-neutral-800/30 gap-3 px-2 py-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-700/30 overflow-hidden`,
                                 {
-                                    "hover:bg-emerald-300/60 dark:hover:bg-emerald-800/30": selected && variant == "normal",
+                                    "hover:bg-emerald-200/60 dark:hover:bg-emerald-800/30 hover:border-emerald-300 dark:hover:border-emerald-950": selected && variant == "normal",
                                     "bg-neutral-950 hover:bg-neutral-900 dark:bg-neutral-50 dark:hover:bg-neutral-100 border-0": newChat
                                 }
                             )}
@@ -74,14 +73,14 @@ export default function AppMenu({
                                 {newChat && <div className="absolute left-0 top-0 z-50 h-[34px] w-full -translate-x-full bg-linear-to-r from-transparent via-white/50 dark:via-black/50 to-transparent group-hover/pill:animate-[shimmer_1.5s]"></div>}
                                 <Icon size={24} className={cn("opacity-50 group-hover/pill:opacity-100", {
                                     "text-white dark:text-black opacity-100": newChat,
-                                    "opacity-100 text-emerald-600 dark:text-emerald-400": selected && !newChat,
+                                    "opacity-100 text-emerald-700 dark:text-emerald-400": selected && !newChat,
                                 })} />
                                 <div className="hidden lg:flex flex-col">
-                                    <span className={cn("flex",{
-                                            "text-white dark:text-black" : newChat,
-                                            "text-neutral-800 group-hover/pill:text-neutral-900 dark:text-neutral-400 dark:group-hover/pill:text-neutral-50": !selected && !newChat,
-                                            "text-emerald-600 dark:text-emerald-400": selected && !newChat,
-                                        })}
+                                    <span className={cn("flex", {
+                                        "text-white dark:text-black": newChat,
+                                        "text-neutral-800 group-hover/pill:text-neutral-900 dark:text-neutral-400 dark:group-hover/pill:text-neutral-50": !selected && !newChat,
+                                        "text-emerald-700 dark:text-emerald-400": selected && !newChat,
+                                    })}
                                     >
                                         {name}
                                     </span>

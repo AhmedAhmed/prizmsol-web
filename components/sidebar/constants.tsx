@@ -1,13 +1,14 @@
 import {
     BarChart3Icon,
+    ClockIcon,
     CreditCardIcon,
-    FolderIcon,
-    HistoryIcon,
+    DatabaseIcon,
     KeyRoundIcon,
     LayersIcon,
     MessageCircleHeart,
     PlusIcon,
     SettingsIcon,
+    UsersIcon
 } from "lucide-react";
 
 export const appMenuItems = [
@@ -17,20 +18,25 @@ export const appMenuItems = [
         href: "/",
         newChat: true,
     },
-    // {
-    //     name: "Agents",
-    //     icon: MessageCircleHeart,
-    //     href: "/agents",
-    // },
     {
-        name: "History",
-        icon: HistoryIcon,
-        href: "/recents",
+        name: "Agents",
+        icon: MessageCircleHeart,
+        href: "/agents",
     },
     {
-        name: "Collections",
-        icon: FolderIcon,
-        href: "/collections"
+        name: "Customers",
+        icon: UsersIcon,
+        href: "/customers",
+    },
+    {
+        name: "Sources",
+        icon: DatabaseIcon,
+        href: "/sources",
+    },
+    {
+        name: "History",
+        icon: ClockIcon,
+        href: "/recents",
     },
     {
         name: "Usage",

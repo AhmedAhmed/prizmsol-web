@@ -1,18 +1,18 @@
 import { CheckIcon } from "lucide-react";
 
-import Link from "next/link";
-import { ChevronLeftIcon } from "lucide-react";
 import { CheckoutButton } from "@/components/billing/checkout-button";
 import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
 import {
   getConfiguredSubscriptionProductIds,
-  getRecurringPriceForProduct,
   getCreditLimitCents,
   getPlanByProductId,
+  getRecurringPriceForProduct,
 } from "@/lib/stripe/billing";
 import { getStripe } from "@/lib/stripe/server";
-import { auth } from "@/lib/auth";
+import { ChevronLeftIcon } from "lucide-react";
 import { headers } from "next/headers";
+import Link from "next/link";
 
 function formatPlanPrice(amount: number | null, interval: string | null) {
   if (amount === null || !interval) {
@@ -178,7 +178,7 @@ export default async function PricingPage({
                     </Button>
                   ) : (
                     <CheckoutButton
-                      label={session?.user ? `Get ${plan.name}` : "Login to subscribe"}
+                      label={`Get ${plan.name}`}
                       productId={plan.productId}
                     />
                   )}
