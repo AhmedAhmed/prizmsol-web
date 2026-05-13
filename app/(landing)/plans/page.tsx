@@ -1,16 +1,17 @@
 import { CheckIcon } from "lucide-react";
 
 import { CheckoutButton } from "@/components/billing/checkout-button";
+import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 import {
+  BillingPlan,
   getConfiguredSubscriptionProductIds,
   getCreditLimitCents,
   getPlanByProductId,
   getRecurringPriceForProduct,
 } from "@/lib/stripe/billing";
 import { getStripe } from "@/lib/stripe/server";
-import { ChevronLeftIcon } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 
@@ -20,6 +21,13 @@ function formatPlanPrice(amount: number | null, interval: string | null) {
   }
 
   return `$${(amount / 100).toFixed(0)}/${interval}`;
+}
+
+// Plan hierarchy: free < pro < plus
+// Returns true if lhs is a strictly lower tier than rhs
+function isLowerPlan(lhs: BillingPlan, rhs: BillingPlan): boolean {
+  const order: Record<BillingPlan, number> = { free: 0, pro: 1, plus: 2 };
+  return order[lhs] < order[rhs];
 }
 
 export default async function PricingPage({
@@ -35,7 +43,7 @@ export default async function PricingPage({
   const productIds = getConfiguredSubscriptionProductIds();
 
   // Fetch the user's current plan from the internal API
-  let currentPlan: string | null = null;
+  let currentPlan: BillingPlan | null = null;
   if (session?.user) {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/account/plan`, {
@@ -44,7 +52,7 @@ export default async function PricingPage({
       });
       if (res.ok) {
         const data = await res.json();
-        currentPlan = data.plan ?? null;
+        currentPlan = (data.plan as BillingPlan) ?? null;
       }
     } catch {
       // If the request fails, fall back to showing no active plan
@@ -52,6 +60,8 @@ export default async function PricingPage({
   }
 
   const isOnFreePlan = session?.user && currentPlan === "free";
+  const isPaidUser =
+    session?.user && currentPlan !== null && currentPlan !== "free";
 
   const paidPlans = await Promise.all(
     productIds.map(async (productId) => {
@@ -63,24 +73,27 @@ export default async function PricingPage({
         productId,
         name: product.name,
         description: product.description ?? "Paid subscription plan",
-        recurringPrice: formatPlanPrice(price.unit_amount, price.recurring?.interval ?? null),
+        recurringPrice: formatPlanPrice(
+          price.unit_amount,
+          price.recurring?.interval ?? null
+        ),
         creditCap,
         isRecommended: product.name.toLowerCase().includes("plus"),
         // Match the plan key returned by the API against the plan identifier
         isCurrentPlan: currentPlan === plan,
+        plan,
       };
     })
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-12">
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 pb-12 pt-5">
       <div className="mb-6 w-full">
         <Link
-          href="/"
-          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+          href="/plans"
+          className="inline-flex items-center gap-1 text-sm transition-colors"
         >
-          <ChevronLeftIcon className="h-4 w-4" />
-          Back
+          <Logo className="h-[24px]" />
         </Link>
       </div>
 
@@ -105,9 +118,9 @@ export default async function PricingPage({
       </div>
 
       <div className="flex w-full justify-center">
-        <div className="w-full max-w-6xl overflow-x-auto rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="w-full max-w-7xl overflow-x-auto rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
           <div className="grid grid-cols-1 lg:grid-cols-3">
-            <section className="flex min-h-[430px] flex-col border-b lg:border-b-0 lg:border-r border-neutral-200 p-7 dark:border-neutral-800">
+            <section className="flex min-h-[430px] flex-col border-b p-7 dark:border-neutral-800 lg:border-b-0 lg:border-r border-neutral-200">
               <h2 className="text-2xl font-semibold">Hobby</h2>
               <p className="mt-1 text-3xl font-bold">Free</p>
               <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
@@ -124,19 +137,40 @@ export default async function PricingPage({
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckIcon className="mt-0.5 h-4 w-4" />
-                  AI usage cap: ${getCreditLimitCents("free") / 100}
+                  ${getCreditLimitCents("free") / 100} of usage included
                 </li>
               </ul>
               {isOnFreePlan ? (
-                <Button className="mt-auto w-full rounded-full" size="lg" variant="outline" disabled>
+                <Button
+                  className="mt-auto w-full rounded-full"
+                  size="lg"
+                  variant="outline"
+                  disabled
+                >
                   Current plan
                 </Button>
-              ) : session?.user ? (
-                <Button className="mt-auto w-full rounded-full" size="lg" variant="outline" disabled>
-                  Hobby
-                </Button>
+              ) : isPaidUser ? (
+                <form
+                  action="/api/stripe/subscription/cancel"
+                  method="POST"
+                  className="mt-auto"
+                >
+                  <Button
+                    className="w-full rounded-full cursor-pointer"
+                    size="lg"
+                    variant="outline"
+                    type="submit"
+                  >
+                    Cancel Subscription
+                  </Button>
+                </form>
               ) : (
-                <Button asChild className="mt-auto w-full rounded-full" size="lg" variant="outline">
+                <Button
+                  asChild
+                  className="mt-auto w-full rounded-full cursor-pointer"
+                  size="lg"
+                  variant="outline"
+                >
                   <Link href="/register">Sign up</Link>
                 </Button>
               )}
@@ -144,18 +178,24 @@ export default async function PricingPage({
 
             {paidPlans.map((plan, index) => (
               <section
-                className="flex min-h-[430px] flex-col border-b lg:border-b-0 lg:border-r border-neutral-200 p-7 last:border-r-0 dark:border-neutral-800"
+                className="flex min-h-[430px] flex-col border-b p-7 dark:border-neutral-800 last:border-r-0 lg:border-b-0 lg:border-r border-neutral-200"
                 key={plan.productId}
               >
                 <div className="flex items-center gap-2">
                   <h2 className="text-2xl font-semibold">{plan.name}</h2>
                   {plan.isRecommended ? (
-                    <span className="text-xs font-semibold text-amber-500">Recommended</span>
+                    <span className="text-xs font-semibold text-amber-500">
+                      Recommended
+                    </span>
                   ) : null}
                 </div>
-                <p className="mt-1 text-3xl font-bold">{plan.recurringPrice}</p>
+                <p className="mt-1 text-3xl font-bold">
+                  {plan.recurringPrice}
+                </p>
                 <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
-                  {index === 0 ? "Everything in Hobby, plus:" : "Everything in Pro, plus:"}
+                  {index === 0
+                    ? "Everything in Hobby, plus:"
+                    : "Everything in Pro, plus:"}
                 </p>
                 <ul className="mt-5 space-y-2.5 text-sm">
                   <li className="flex items-start gap-2">
@@ -168,20 +208,36 @@ export default async function PricingPage({
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckIcon className="mt-0.5 h-4 w-4" />
-                    AI usage cap: ${plan.creditCap / 100}
+                    Higher usage limits
                   </li>
                 </ul>
                 <div className="mt-auto pt-7">
                   {plan.isCurrentPlan ? (
-                    <Button className="w-full rounded-full" size="lg" variant="outline" disabled>
+                    <Button
+                      className="w-full rounded-full"
+                      size="lg"
+                      variant="outline"
+                      disabled
+                    >
                       Current plan
                     </Button>
-                  ) : (
-                    <CheckoutButton
-                      label={`Get ${plan.name}`}
-                      productId={plan.productId}
-                    />
-                  )}
+                  ) : // If user is on a higher paid plan, block purchase of lower plans
+                    currentPlan &&
+                      isLowerPlan(plan.plan, currentPlan) ? (
+                      <Button
+                        className="w-full rounded-full"
+                        size="lg"
+                        variant="outline"
+                        disabled
+                      >
+                        Not available
+                      </Button>
+                    ) : (
+                      <CheckoutButton
+                        label={`Get ${plan.name}`}
+                        productId={plan.productId}
+                      />
+                    )}
                 </div>
               </section>
             ))}

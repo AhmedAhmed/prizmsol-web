@@ -21,9 +21,9 @@ export function MainMenu(props: any) {
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <Link href="/pricing" legacyBehavior passHref>
+          <Link href="/plans" legacyBehavior passHref>
             <NavigationMenuLink className="hidden group lg:inline-flex h-10 w-max items-center justify-center rounded-md px-3 py-1 transition-colors focus:bg-neutral-100 focus:text-neutral-900 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-active:bg-neutral-100/50 data-[state=open]:bg-neutral-100/50 dark:focus:bg-neutral-800 dark:focus:text-neutral-50 dark:data-active:bg-neutral-800/50 dark:data-[state=open]:bg-neutral-800/50 group bg-transparent dark:bg-transparent text-sm font-semibold">
-              Pricing
+              Plan
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>

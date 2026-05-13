@@ -1,9 +1,9 @@
 import AnimatedBadge from "@/components/AnimatedBadge";
+import Greeting from "@/components/chat/greeting";
 import { getMessagesCountByUserId } from "@/lib/db/queries";
 import { AlertTriangleIcon } from "lucide-react";
 import Link from "next/link";
 import ChatPrompt from "./form";
-import Greeting from "@/components/chat/greeting";
 
 type SearchParams = {
     [key: string]: string | string[] | undefined;
@@ -36,7 +36,7 @@ export default async function NewPage({
         <div className="flex flex-col flex-1 w-full justify-center items-center px-10">
             <div className="flex flex-col gap-10 flex-1 w-full max-w-7xl">
                 <div className="flex flex-1 flex-col justify-center w-full">
-                    <Link href="/pricing" className="mb-5 flex self-center justify-self-center gap-2">
+                    <Link href="/plans" className="mb-5 flex self-center justify-self-center gap-2">
                         <AnimatedBadge text="Introducing Prizm v1" />
                     </Link>
                     <Greeting />
@@ -50,8 +50,8 @@ export default async function NewPage({
                     </div>
                     <ul className="flex gap-5 text-sm">
                         <li className="flex">
-                            <Link href="/pricing">
-                                Pricing
+                            <Link href="/plans">
+                                Plan
                             </Link>
                         </li>
                         <li className="flex">

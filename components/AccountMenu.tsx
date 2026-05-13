@@ -107,7 +107,7 @@ export default function AccountMenu({
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                            <Link href="/pricing" className="flex items-center w-full">
+                            <Link href="/plans" className="flex items-center w-full">
                                 <CreditCardIcon className="mr-2 h-4 w-4" />
                                 <span>Plans</span>
                             </Link>

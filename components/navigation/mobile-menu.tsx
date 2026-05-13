@@ -42,10 +42,10 @@ export function MobileMenu() {
             <li className="flex gap-5">
               <SheetClose asChild>
                 <Link
-                  href="/pricing"
+                  href="/plans"
                   className="py-2 px-4 w-full hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-md"
                 >
-                  Pricing
+                  Plan
                 </Link>
               </SheetClose>
             </li>

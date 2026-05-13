@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Loader2Icon } from "lucide-react";
+import { useState } from "react";
 
 type CheckoutButtonProps = {
   disabled?: boolean;
@@ -31,7 +31,7 @@ export function CheckoutButton({
 
       if (response.status === 401) {
         window.location.href = `/login?redirectUrl=${encodeURIComponent(
-          "/pricing"
+          "/plans"
         )}`;
         return;
       }
@@ -55,7 +55,7 @@ export function CheckoutButton({
 
   return (
     <Button
-      className="w-full"
+      className="w-full cursor-pointer"
       disabled={disabled || isLoading}
       onClick={onCheckout}
       size="lg"
