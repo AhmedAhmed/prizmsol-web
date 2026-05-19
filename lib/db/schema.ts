@@ -11,6 +11,7 @@ import {
     timestamp,
     uuid,
     varchar,
+    vector,
 } from "drizzle-orm/pg-core";
 
 // ─── Auth Tables ─────────────────────────────────────────────────────────────
@@ -29,7 +30,7 @@ export const user = pgTable("user", {
         .notNull(),
 
     // Custom columns
-    plan: varchar("plan", { enum: ["free", "pro", "plus"] }).notNull().default("free"),
+    plan: varchar("plan", { enum: ["free", "pro", "max"] }).notNull().default("free"),
     stripeCustomerId: text("stripeCustomerId"),
     stripeSubscriptionId: text("stripeSubscriptionId"),
     stripeProductId: text("stripeProductId"),
@@ -169,17 +170,6 @@ export const aiCreditUsageEvent = pgTable("ai_credit_usage_events", {
 
 export type AICreditUsageEvent = InferSelectModel<typeof aiCreditUsageEvent>;
 
-export const sources = pgTable("ai_sources", {
-    id: uuid("id").primaryKey().notNull().defaultRandom(),
-    userId: text("projectId").notNull().references(() => user.id),
-    title: varchar("title").notNull(),
-    type: varchar("type", { enum: ["text", "file"] }).notNull(),
-    content: varchar("content").notNull(),
-    createdAt: timestamp("createdAt").notNull().defaultNow(),
-});
-
-export type Source = InferSelectModel<typeof sources>;
-
 export const portfolio = pgTable("portfolio", {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     userId: text("userId").notNull().references(() => user.id),
@@ -194,25 +184,63 @@ export const portfolio = pgTable("portfolio", {
 
 export type Portfolio = InferSelectModel<typeof portfolio>;
 
-// ─── Agents ──────────────────────────────────────────────────────────────────
+// ─── Sources ──────────────────────────────────────────────────────────────────
 
-export const agents = pgTable("agents", {
-    id: uuid("id").primaryKey().notNull().defaultRandom(),
-    name: text("name"),
-    displayName: text("display_name"),
-    initialMessage: text("initial_message"),
-    dismissalMessage: text("dismissal_message"),
-    systemPrompt: text("system_prompt"),
-    model: text("model"),
-    temperature: real("temperature"),
-    isPrivate: boolean("is_private").default(false),
-    vanity: text("vanity").unique(),
-    description: text("description"),
-    userId: text("user_id").references(() => user.id),
-    createdAt: timestamp("created_at").defaultNow(),
-});
+/** User-attached materials (website / text / file) and training pipeline status. */
+export const source = pgTable(
+    "sources",
+    {
+        id: uuid("id").primaryKey().notNull().defaultRandom(),
+        userId: text("userId")
+            .notNull()
+            .references(() => user.id, { onDelete: "cascade" }),
+        type: varchar("type", { enum: ["website", "text", "file"] }).notNull(),
+        name: varchar("name").notNull(),
+        status: varchar("status", {
+            enum: ["pending", "processing", "ready", "failed"],
+        })
+            .notNull()
+            .default("pending"),
+        metadata: json("metadata").notNull().default({}),
+        createdAt: timestamp("createdAt").notNull().defaultNow(),
+        updatedAt: timestamp("updatedAt")
+            .notNull()
+            .defaultNow()
+            .$onUpdate(() => new Date()),
+    },
+    (table) => [
+        index("sources_userId_idx").on(table.userId),
+    ],
+);
 
-export type Agent = InferSelectModel<typeof agents>;
+/** text-embedding-3-small = 1536; text-embedding-3-large = 3072 */
+export const SOURCE_EMBEDDING_DIMENSIONS = 1536 as const;
+
+/**
+ * One row per chunk: raw text + optional embedding for similarity search.
+ * Parent metadata and ingestion status live on `source`.
+ */
+export const sourceChunk = pgTable(
+    "source_chunks",
+    {
+        id: uuid("id").primaryKey().notNull().defaultRandom(),
+        sourceId: uuid("sourceId")
+            .notNull()
+            .references(() => source.id, { onDelete: "cascade" }),
+        content: text("content").notNull(),
+        embedding: vector("embedding", { dimensions: SOURCE_EMBEDDING_DIMENSIONS }),
+        chunkIndex: integer("chunkIndex").notNull(),
+        metadata: json("metadata").notNull().default({}),
+        createdAt: timestamp("createdAt").notNull().defaultNow(),
+    },
+    (table) => [index("source_chunks_source_idx").on(table.sourceId)],
+);
+
+export type DBSource = InferSelectModel<typeof source>;
+export type SourceType = DBSource["type"];
+export type Source = DBSource;
+
+export type DBSourceChunk = InferSelectModel<typeof sourceChunk>;
 
 // ─── Relations ────────────────────────────────────────────────────────────────
 
@@ -221,8 +249,7 @@ export const userRelations = relations(user, ({ many }) => ({
     accounts: many(account),
     messages: many(message),
     aiCreditUsageEvents: many(aiCreditUsageEvent),
-    sources: many(sources),
-    agents: many(agents),
+    sources: many(source),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -236,4 +263,13 @@ export const accountRelations = relations(account, ({ one }) => ({
 export const messageRelations = relations(message, ({ one }) => ({
     user: one(user, { fields: [message.userId], references: [user.id] }),
     chat: one(chat, { fields: [message.chatId], references: [chat.id] }),
+}));
+
+export const sourceRelations = relations(source, ({ one, many }) => ({
+    user: one(user, { fields: [source.userId], references: [user.id] }),
+    chunks: many(sourceChunk),
+}));
+
+export const sourceChunkRelations = relations(sourceChunk, ({ one }) => ({
+    source: one(source, { fields: [sourceChunk.sourceId], references: [source.id] }),
 }));

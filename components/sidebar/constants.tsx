@@ -5,10 +5,8 @@ import {
     DatabaseIcon,
     KeyRoundIcon,
     LayersIcon,
-    MessageCircleHeart,
     PlusIcon,
     SettingsIcon,
-    UsersIcon
 } from "lucide-react";
 
 export const appMenuItems = [
@@ -17,16 +15,6 @@ export const appMenuItems = [
         icon: PlusIcon,
         href: "/",
         newChat: true,
-    },
-    {
-        name: "Agents",
-        icon: MessageCircleHeart,
-        href: "/agents",
-    },
-    {
-        name: "Customers",
-        icon: UsersIcon,
-        href: "/customers",
     },
     {
         name: "Sources",

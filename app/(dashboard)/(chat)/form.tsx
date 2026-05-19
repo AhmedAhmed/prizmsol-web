@@ -1,6 +1,7 @@
 "use client";
 import PromptInput from "@/components/chat/prompt-input";
 import { useRouter } from "next/navigation";
+import React from "react";
 import { toast } from "sonner";
 import { submitMessage } from "./actions";
 
@@ -13,7 +14,9 @@ export default function ChatPrompt({
 }) {
     const router = useRouter();
 
-    const handleSubmit = async (formData: FormData) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
         const { success, chatId } = await submitMessage(formData);
         if (success) {
             toast.success("Chat created successfully. Taking you there...");
@@ -26,7 +29,7 @@ export default function ChatPrompt({
     return (
         <PromptInput
             showPills
-            action={handleSubmit}
+            onSubmit={handleSubmit}
             messagesCount={count}
             defaultValue={defaultPrompt}
         />

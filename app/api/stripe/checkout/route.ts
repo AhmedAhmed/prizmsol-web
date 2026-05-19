@@ -1,14 +1,14 @@
 
-import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { ensureStripeCustomerForUser, getRecurringPriceForProduct } from "@/lib/stripe/billing";
 import { getStripe } from "@/lib/stripe/server";
-import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
     const session = await auth.api.getSession({
-        headers: await headers() // you need to pass the headers object.
+      headers: await headers() // you need to pass the headers object.
     })
 
     if (!session?.user?.id || !session.user.email) {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
         productId,
       },
       success_url: `${origin}/?checkout=success`,
-      cancel_url: `${origin}/plan?checkout=cancelled`,
+      cancel_url: `${origin}/plans?checkout=cancelled`,
     });
 
     return NextResponse.json({ url: checkoutSession.url });

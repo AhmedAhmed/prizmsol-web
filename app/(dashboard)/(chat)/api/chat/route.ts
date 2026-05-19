@@ -1,9 +1,19 @@
 import { generateTitleFromUserMessage } from '@/app/(dashboard)/(chat)/actions';
-import { chat_research_prompt } from '@/lib/ai/prompts';
+import { buildChatResearchSystemPrompt } from '@/lib/ai/prompts';
 import { createDocumentTool, webSearchTool } from '@/lib/ai/tools';
+import { auth } from '@/lib/auth';
 import { isProductionEnvironment } from '@/lib/constants';
+import {
+  getMessagesByChatId,
+  getReadySourcesForUser,
+  getTopKChunksByEmbedding,
+  getUserAiCreditUsageTotal,
+  incrementUserAiCreditUsage,
+  saveChat,
+  saveMessages,
+} from '@/lib/db/queries';
+import { embedQuery } from '@/lib/sources/embed-query';
 import { getCreditLimitCents, getCurrentUsageWindow, reconcileUserPlanStatus } from '@/lib/stripe/billing';
-import { getMessagesByChatId, getUserAiCreditUsageTotal, incrementUserAiCreditUsage, saveChat, saveMessages } from '@/lib/db/queries';
 import { gateway } from '@ai-sdk/gateway';
 import {
   convertToModelMessages,
@@ -16,21 +26,33 @@ import {
 } from 'ai';
 import { isEmpty } from 'lodash';
 import { revalidatePath } from 'next/cache';
-import { v4 as uuid } from 'uuid';
-import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { v4 as uuid } from 'uuid';
 
 export const maxDuration = 30;
 
+// ---------------------------------------------------------------------------
+// Helper — safely extracts text from a message part
+// ---------------------------------------------------------------------------
+const getPartText = (part: unknown): string | undefined => {
+  if (!part || typeof part !== 'object') return undefined;
+  const candidate = (part as { text?: unknown }).text;
+  return typeof candidate === 'string' ? candidate : undefined;
+};
+
 export async function POST(req: Request) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
-    })
+    // ------------------------------------------------------------------
+    // 1. Auth
+    // ------------------------------------------------------------------
+    const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user?.id) {
       return new Response('Unauthorized', { status: 401 });
     }
 
+    // ------------------------------------------------------------------
+    // 2. Billing guard
+    // ------------------------------------------------------------------
     const selectedUser = await reconcileUserPlanStatus(session.user.id);
     if (!selectedUser) {
       return new Response('User not found', { status: 404 });
@@ -45,53 +67,55 @@ export async function POST(req: Request) {
       from: usageWindow.from,
       to: usageWindow.to,
     });
-    const currentLimitCents = getCreditLimitCents((selectedUser.plan ?? 'free') as 'free' | 'pro' | 'plus');
+    const currentLimitCents = getCreditLimitCents(
+      (selectedUser.plan ?? 'free') as 'free' | 'pro' | 'max',
+    );
     if (usedInWindowCents >= currentLimitCents) {
       return new Response('AI credit limit reached for your current plan', { status: 402 });
     }
 
+    // ------------------------------------------------------------------
+    // 3. Parse request body
+    // ------------------------------------------------------------------
     const body = await req.json();
     const chatId = body.id ?? body.chatId;
     const incomingMessages = (body.messages ?? []).filter(Boolean) as UIMessage[];
     const message = body.message as UIMessage | undefined;
 
-    // Backward compatibility in case a single message payload is sent.
+    // Backward compatibility — single message payload
     const effectiveMessages =
-      incomingMessages.length > 0
-        ? incomingMessages
-        : message
-          ? [message]
-          : [];
+      incomingMessages.length > 0 ? incomingMessages : message ? [message] : [];
 
     if (!chatId || effectiveMessages.length === 0) {
       return new Response('Invalid chat payload', { status: 400 });
     }
 
+    // ------------------------------------------------------------------
+    // 4. Resolve latest user message + its plain text
+    // ------------------------------------------------------------------
     const latestUserMessage = [...effectiveMessages].reverse().find((m) => m.role === 'user');
 
+    const queryText =
+      latestUserMessage?.parts?.map(getPartText).filter(Boolean).join(' ') ?? '';
+
+    // ------------------------------------------------------------------
+    // 5. DB history + first-message chat creation
+    // ------------------------------------------------------------------
     const messagesFromDb = await getMessagesByChatId({ id: chatId });
 
-    // Create chat + generate title on first message
-    const getPartText = (part: unknown): string | undefined => {
-      if (!part || typeof part !== 'object') return undefined;
-      const candidate = (part as { text?: unknown }).text;
-      return typeof candidate === 'string' ? candidate : undefined;
-    };
-
     if (isEmpty(messagesFromDb) && latestUserMessage) {
-      const textContent = latestUserMessage.parts?.map(getPartText).find(Boolean) ?? '';
-      const title = await generateTitleFromUserMessage(textContent);
+      const title = await generateTitleFromUserMessage(queryText);
       await saveChat({ id: chatId, title, userId: session.user.id });
     }
 
     const serializeParts = (parts: unknown) => JSON.stringify(parts ?? []);
     const existingMessageSignatures = new Set(
       (messagesFromDb as Array<{ role: string; parts: unknown }>).map(
-        (m) => `${m.role}:${serializeParts(m.parts)}`
-      )
+        (m) => `${m.role}:${serializeParts(m.parts)}`,
+      ),
     );
 
-    // Save incoming user message using DB UUID ids (SDK ids are not guaranteed UUIDs).
+    // Save incoming user message (deduplicated by role+parts signature)
     if (
       latestUserMessage?.role === 'user' &&
       !existingMessageSignatures.has(`user:${serializeParts(latestUserMessage.parts)}`)
@@ -101,7 +125,7 @@ export async function POST(req: Request) {
           {
             userId: session.user.id,
             chatId,
-            content: "",
+            content: '',
             id: uuid(),
             role: 'user',
             parts: latestUserMessage.parts,
@@ -112,18 +136,46 @@ export async function POST(req: Request) {
       });
     }
 
-    // Build the full UIMessage array: DB history + new message
-    const uiMessages: UIMessage[] = [
-      ...effectiveMessages,
-    ];
-
+    // ------------------------------------------------------------------
+    // 6. Convert messages for the model
+    // ------------------------------------------------------------------
+    const uiMessages: UIMessage[] = [...effectiveMessages];
     const modelMessages = await convertToModelMessages(uiMessages);
 
+    // ------------------------------------------------------------------
+    // 7. RAG — embed query → retrieve top-K chunks
+    // ------------------------------------------------------------------
+    const sourceRows = await getReadySourcesForUser({ userId: session.user.id });
+
+    let retrievedChunks: { content: string; title: string }[] = [];
+
+    if (sourceRows.length > 0 && queryText.trim().length > 0) {
+      try {
+        const queryEmbedding = await embedQuery(queryText);
+        retrievedChunks = await getTopKChunksByEmbedding({
+          userId: session.user.id,
+          embedding: queryEmbedding,
+          topK: 5,
+        });
+      } catch (e) {
+        // Non-fatal — degrade gracefully to no retrieved context
+        console.error('RAG embedding/retrieval failed, proceeding without chunks:', e);
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // 8. Build system prompt (base + retrieved chunks + full sources)
+    // ------------------------------------------------------------------
+    const systemPrompt = buildChatResearchSystemPrompt(sourceRows, retrievedChunks);
+
+    // ------------------------------------------------------------------
+    // 9. Stream
+    // ------------------------------------------------------------------
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {
         const result = streamText({
           model: gateway('moonshotai/kimi-k2.5'),
-          system: chat_research_prompt,
+          system: systemPrompt,
           messages: modelMessages,
           stopWhen: stepCountIs(5),
           experimental_transform: smoothStream({ chunking: 'word' }),
@@ -136,7 +188,6 @@ export async function POST(req: Request) {
             functionId: 'stream-text',
           },
           onFinish: async ({ usage }) => {
-            // Approximate spend for gateway model using per-1M token pricing.
             const promptTokens = usage?.inputTokens ?? 0;
             const completionTokens = usage?.outputTokens ?? 0;
             const inputCentsPerMillion = 30;
@@ -154,8 +205,8 @@ export async function POST(req: Request) {
 
         dataStream.merge(result.toUIMessageStream({ sendSources: true }));
       },
+
       onFinish: async ({ messages: finishedMessages }) => {
-        // Save only truly new messages by role+parts signature, using DB UUID ids.
         const newMessages = finishedMessages.filter((m) => {
           const signature = `${m.role}:${serializeParts(m.parts)}`;
           return !existingMessageSignatures.has(signature);
@@ -170,7 +221,7 @@ export async function POST(req: Request) {
                 userId: session.user.id,
                 chatId,
                 id: uuid(),
-                content: "",
+                content: '',
                 role: m.role,
                 parts: m.parts,
                 attachments: (m as any).attachments ?? [],
@@ -182,6 +233,7 @@ export async function POST(req: Request) {
 
         revalidatePath('/', 'layout');
       },
+
       onError: (error: any) => {
         console.error(error);
         return 'Oops! Something went wrong.';
@@ -191,8 +243,6 @@ export async function POST(req: Request) {
     return createUIMessageStreamResponse({ stream });
   } catch (error) {
     console.error(error);
-    return new Response('An error occurred while processing your request!', {
-      status: 500,
-    });
+    return new Response('An error occurred while processing your request!', { status: 500 });
   }
 }

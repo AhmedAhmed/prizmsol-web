@@ -157,7 +157,7 @@ export default function Chat({
 
         sendMessage({ text: message });
         setInput("");
-    }
+    };
 
     return (
         <div className={cn("flex flex-col flex-1 w-full max-w-[calc(100vw-70px)] h-[calc(100vh-25px)] lg:max-w-[calc(100vw-265px)] overflow-hidden", {

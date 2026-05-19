@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeftIcon } from "lucide-react";
+import { ChevronLeftIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "./button";
 
@@ -13,8 +13,8 @@ export default function BackButton({
         router.back();
     }
     return (
-        <Button variant="ghost" size="icon" onClick={goBack} className={`${className} rounded-full curspor-pointer`}>
-            <ArrowLeftIcon className="h-4" />
+        <Button variant="ghost" size="icon" onClick={goBack} className={`${className} rounded-sm curspor-pointer`}>
+            <ChevronLeftIcon className="h-4" />
         </Button>
     );
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { PLAN_CREDIT_USD_DEFAULT } from "@/lib/plan-credit-defaults"
 import { cn } from "@/lib/utils"
 import isEmpty from "lodash/isEmpty"
 import { Check } from "lucide-react"
@@ -55,21 +56,28 @@ export default function PricingTable(props: { compact?: boolean, user: any }) {
         name: "Free",
         price: "$0",
         description: "For getting started",
-        credits: "500 message credits per month",
+        credits: `$${PLAN_CREDIT_USD_DEFAULT.free} of AI usage per month`,
         buttonText: plan == "Free" ? "Current plan" : "Cancel Plan",
         buttonHref: "/billing",
         current: plan === "Free",
         isCancelable: plan !== "Free",
-        features: ["500 Messages a month", "100 Image searches a month", "Unlimited Document Creations"],
+        features: [
+          `$${PLAN_CREDIT_USD_DEFAULT.free} of AI usage per month`,
+          "Image search and documents",
+        ],
       },
       {
         name: "Pro",
-        price: "$20",
+        price: "$25",
         description: "For everyone",
-        credits: "Unlimited message credits per month",
+        credits: `$${PLAN_CREDIT_USD_DEFAULT.pro} of AI usage per month`,
         buttonText: plan == "Pro" ? "Current plan" : plan == "Max" ? "Cancel Plan" : "Get Pro plan",
         buttonHref: "/billing",
-        features: ["Everything in Free", "Unlimited Messages", "2500 Premium Messages", "Unlimited Image Search", "Unlimited Documents"],
+        features: [
+          "Everything in Free",
+          `$${PLAN_CREDIT_USD_DEFAULT.pro} of AI usage per month`,
+          "Higher limits than Free",
+        ],
         featured: true,
         current: plan === "Pro",
         isCancelable: plan == "Max",
@@ -79,10 +87,14 @@ export default function PricingTable(props: { compact?: boolean, user: any }) {
         name: "Max",
         price: "$200",
         description: "For power users",
-        credits: "Unlimited message credits per month",
+        credits: `$${PLAN_CREDIT_USD_DEFAULT.max} of AI usage per month`,
         buttonText: plan == "Max" ? "Current plan" : "Get Max plan",
         buttonHref: "/billing",
-        features: ["Everything in Pro", "Unlimited Premium Messages", "Unlimited Image Search"],
+        features: [
+          "Everything in Pro",
+          `$${PLAN_CREDIT_USD_DEFAULT.max} of AI usage per month`,
+          "Highest usage limits",
+        ],
         featured: false,
         current: plan === "Max",
         isCancelable: false,

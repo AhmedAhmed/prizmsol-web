@@ -23,10 +23,10 @@ function formatPlanPrice(amount: number | null, interval: string | null) {
   return `$${(amount / 100).toFixed(0)}/${interval}`;
 }
 
-// Plan hierarchy: free < pro < plus
+// Plan hierarchy: free < pro < max
 // Returns true if lhs is a strictly lower tier than rhs
 function isLowerPlan(lhs: BillingPlan, rhs: BillingPlan): boolean {
-  const order: Record<BillingPlan, number> = { free: 0, pro: 1, plus: 2 };
+  const order: Record<BillingPlan, number> = { free: 0, pro: 1, max: 2 };
   return order[lhs] < order[rhs];
 }
 
@@ -78,7 +78,7 @@ export default async function PricingPage({
           price.recurring?.interval ?? null
         ),
         creditCap,
-        isRecommended: product.name.toLowerCase().includes("plus"),
+        isRecommended: product.name.toLowerCase().includes("pro") && !product.name.toLowerCase().includes("max"),
         // Match the plan key returned by the API against the plan identifier
         isCurrentPlan: currentPlan === plan,
         plan,

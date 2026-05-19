@@ -142,3 +142,32 @@ export const image_search_prompt = `\n
       - you will generate a short query used for image search based on the first message a user begins a conversation with
       - ensure it is short and concise
 `;
+
+export function buildChatResearchSystemPrompt(
+    referenceSources: { title: string; content: string }[],
+    retrievedChunks: { content: string; title: string }[] = [],
+  ): string {
+    let prompt = chat_research_prompt;
+   
+    if (retrievedChunks.length > 0) {
+      const blocks = retrievedChunks
+        .map((c, i) => `[${i + 1}] (${c.title})\n${c.content}`)
+        .join('\n\n---\n\n');
+   
+      prompt += `\n\n## Relevant excerpts from user's knowledge base
+  The following chunks were retrieved based on the current query. Use them as the primary reference when answering. Cite the source title when referencing them.
+  ${blocks}`;
+    }
+   
+    if (referenceSources.length > 0) {
+      const blocks = referenceSources
+        .map((s) => `### ${s.title}\n${s.content}`)
+        .join('\n\n---\n\n');
+   
+      prompt += `\n\n## User-provided sources
+  The user attached reference material below. Treat it as authoritative for this conversation when it is relevant. If it conflicts with general knowledge, prefer the sources. Do not claim you were "trained" on these files; they are context attached to this chat.
+  ${blocks}`;
+    }
+   
+    return prompt;
+  }

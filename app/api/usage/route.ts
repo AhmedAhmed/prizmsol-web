@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { getUserAiCreditUsageEvents, getUserAiCreditUsageTotal } from "@/lib/db/queries";
 import { getCreditLimitCents, getCurrentUsageWindow, reconcileUserPlanStatus } from "@/lib/stripe/billing";
-import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { NextResponse } from "next/server";
 
 type ViewType = "daily" | "weekly" | "monthly" | "yearly";
 
@@ -25,7 +25,7 @@ function bucketKey(date: Date, view: ViewType) {
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
+    headers: await headers() // you need to pass the headers object.
   })
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,9 +35,9 @@ export async function GET(request: Request) {
   const requestedView = searchParams.get("view") as ViewType | null;
   const view: ViewType =
     requestedView === "daily" ||
-    requestedView === "weekly" ||
-    requestedView === "monthly" ||
-    requestedView === "yearly"
+      requestedView === "weekly" ||
+      requestedView === "monthly" ||
+      requestedView === "yearly"
       ? requestedView
       : "monthly";
 
@@ -77,10 +77,10 @@ export async function GET(request: Request) {
     view,
     points,
     totalUsed: Number((usedInCycleCents / 100).toFixed(2)),
-    limit: Number((getCreditLimitCents((user?.plan ?? "free") as "free" | "pro" | "plus") / 100).toFixed(2)),
+    limit: Number((getCreditLimitCents((user?.plan ?? "free") as "free" | "pro" | "max") / 100).toFixed(2)),
     remaining: Number(
       (
-        (getCreditLimitCents((user?.plan ?? "free") as "free" | "pro" | "plus") -
+        (getCreditLimitCents((user?.plan ?? "free") as "free" | "pro" | "max") -
           usedInCycleCents) /
         100
       ).toFixed(2)

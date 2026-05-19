@@ -1,22 +1,29 @@
-import "server-only";
-import Stripe from "stripe";
 import {
   getUserById,
   getUserByStripeCustomerId,
   updateUserPlanAndSubscription,
   updateUserStripeCustomerId,
 } from "@/lib/db/queries";
+import { PLAN_CREDIT_USD_DEFAULT } from "@/lib/plan-credit-defaults";
 import { getStripe } from "@/lib/stripe/server";
+import "server-only";
+import Stripe from "stripe";
 
-export type BillingPlan = "free" | "pro" | "plus";
+export type BillingPlan = "free" | "pro" | "max";
 
-const FREE_CREDIT_LIMIT_CENTS = Number(process.env.FREE_AI_CREDIT_LIMIT_CENTS ?? 100);
-const PRO_CREDIT_LIMIT_CENTS = Number(process.env.PRO_AI_CREDIT_LIMIT_CENTS ?? 20000);
-const PLUS_CREDIT_LIMIT_CENTS = Number(process.env.PLUS_AI_CREDIT_LIMIT_CENTS ?? 1500);
+const FREE_CREDIT_LIMIT_CENTS = Number(
+  process.env.FREE_AI_CREDIT_LIMIT_CENTS ?? PLAN_CREDIT_USD_DEFAULT.free * 100
+);
+const MAX_CREDIT_LIMIT_CENTS = Number(
+  process.env.MAX_AI_CREDIT_LIMIT_CENTS ?? PLAN_CREDIT_USD_DEFAULT.max * 100
+);
+const PRO_CREDIT_LIMIT_CENTS = Number(
+  process.env.PRO_AI_CREDIT_LIMIT_CENTS ?? PLAN_CREDIT_USD_DEFAULT.pro * 100
+);
 
 export function getCreditLimitCents(plan: BillingPlan) {
-  if (plan === "plus") return PLUS_CREDIT_LIMIT_CENTS;
   if (plan === "pro") return PRO_CREDIT_LIMIT_CENTS;
+  if (plan === "max") return MAX_CREDIT_LIMIT_CENTS;
   return FREE_CREDIT_LIMIT_CENTS;
 }
 
@@ -43,9 +50,9 @@ export function getCurrentUsageWindow(user: {
 
 export function getPlanByProductId(productId: string | null | undefined): BillingPlan {
   if (!productId) return "free";
-  const plusProductId = process.env.STRIPE_PLUS_PRODUCT_ID;
+  const maxProductId = process.env.STRIPE_MAX_PRODUCT_ID;
   const proProductId = process.env.STRIPE_PRO_PRODUCT_ID ?? process.env.STRIPE_PRODUCT_ID;
-  if (plusProductId && productId === plusProductId) return "plus";
+  if (maxProductId && productId === maxProductId) return "max";
   if (proProductId && productId === proProductId) return "pro";
   return "free";
 }
@@ -59,7 +66,7 @@ export function getConfiguredSubscriptionProductIds() {
 
   const fromVars = [
     process.env.STRIPE_PRO_PRODUCT_ID ?? process.env.STRIPE_PRODUCT_ID,
-    process.env.STRIPE_PLUS_PRODUCT_ID,
+    process.env.STRIPE_MAX_PRODUCT_ID,
   ].filter(Boolean) as string[];
 
   if (fromVars.length > 0) {

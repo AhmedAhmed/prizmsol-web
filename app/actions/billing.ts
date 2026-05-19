@@ -1,12 +1,12 @@
 "use server";
 
+import { auth } from "@/lib/auth";
 import { getUserAiCreditUsageEvents, getUserAiCreditUsageTotal } from "@/lib/db/queries";
 import {
   getCreditLimitCents,
   getCurrentUsageWindow,
   reconcileUserPlanStatus,
 } from "@/lib/stripe/billing";
-import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 type ViewType = "daily" | "weekly" | "monthly" | "yearly";
@@ -30,7 +30,7 @@ function bucketKey(date: Date, view: ViewType) {
 
 export async function getAccountSnapshotAction() {
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
+    headers: await headers() // you need to pass the headers object.
   })
   if (!session?.user?.id) {
     return { plan: "free", totalUsed: 0, limit: 0, remaining: 0, isAuthenticated: false };
@@ -46,7 +46,7 @@ export async function getAccountSnapshotAction() {
     from: cycleWindow.from,
     to: cycleWindow.to,
   });
-  const limitCents = getCreditLimitCents((user?.plan ?? "free") as "free" | "pro" | "plus");
+  const limitCents = getCreditLimitCents((user?.plan ?? "free") as "free" | "pro" | "max");
 
   return {
     plan: user?.plan ?? "free",
@@ -59,7 +59,7 @@ export async function getAccountSnapshotAction() {
 
 export async function getUsageDataAction(view: ViewType = "monthly") {
   const session = await auth.api.getSession({
-      headers: await headers() // you need to pass the headers object.
+    headers: await headers() // you need to pass the headers object.
   })
   if (!session?.user?.id) {
     return {
@@ -105,7 +105,7 @@ export async function getUsageDataAction(view: ViewType = "monthly") {
     amount: Number((amountCents / 100).toFixed(2)),
   }));
 
-  const limitCents = getCreditLimitCents((user?.plan ?? "free") as "free" | "pro" | "plus");
+  const limitCents = getCreditLimitCents((user?.plan ?? "free") as "free" | "pro" | "max");
 
   return {
     view,

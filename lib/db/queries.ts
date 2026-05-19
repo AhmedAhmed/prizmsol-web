@@ -1,8 +1,8 @@
 import 'server-only';
 
-import { and, asc, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, lte, ne, sql } from 'drizzle-orm';
 import { db } from './drizzle';
-import { Agent, agents, aiCreditUsageEvent, chat, DBMessage, Documents, Likes, message, portfolio, user, User } from './schema';
+import { aiCreditUsageEvent, chat, DBMessage, Documents, Likes, message, portfolio, source, Source, sourceChunk, user, User } from './schema';
 
 export async function getUser(email: string): Promise<User[]> {
     try {
@@ -74,7 +74,7 @@ export async function updateUserPlanAndSubscription({
     resetCredits,
 }: {
     userId: string;
-    plan: "free" | "pro" | "plus";
+    plan: "free" | "pro" | "max";
     stripeSubscriptionId: string | null;
     stripeProductId: string | null;
     billingPeriodStart: Date | null;
@@ -596,74 +596,276 @@ export async function updatePortfolio({
     }
 }
 
-export async function saveAgent({
-    name,
-    displayName,
-    description,
+// ── Sources ─────────────────────────────────────────────────────────
+
+/**
+ * Loads `ready` sources owned by the user and concatenates
+ * all `source_chunks` in order for chat / RAG context.
+ */
+export async function getSourcesByIdsForUser({
+    userId,
+    ids,
+}: {
+    userId: string;
+    ids: string[];
+}): Promise<{ title: string; content: string }[]> {
+    if (ids.length === 0) {
+        return [];
+    }
+    try {
+        const chunkRows = await db
+            .select({
+                sourceId: source.id,
+                sourceName: source.name,
+                chunkIndex: sourceChunk.chunkIndex,
+                content: sourceChunk.content,
+            })
+            .from(sourceChunk)
+            .innerJoin(source, eq(sourceChunk.sourceId, source.id))
+            .where(
+                and(
+                    inArray(source.id, ids),
+                    eq(source.status, 'ready'),
+                    eq(source.userId, userId),
+                ),
+            )
+            .orderBy(asc(source.id), asc(sourceChunk.chunkIndex));
+
+        const bySource = new Map<string, { name: string; parts: string[] }>();
+        for (const row of chunkRows) {
+            const key = row.sourceId;
+            if (!bySource.has(key)) {
+                bySource.set(key, { name: row.sourceName, parts: [] });
+            }
+            bySource.get(key)!.parts.push(row.content);
+        }
+
+        return [...bySource.values()].map((v) => ({
+            title: v.name,
+            content: v.parts.join('\n\n'),
+        }));
+    } catch (_error) {
+        throw new Error('Failed to get sources');
+    }
+}
+
+export async function getReadySourcesForUser({
     userId,
 }: {
-    name: string;
-    displayName: string;
-    description: string;
-    userId: string | null;
-}) {
+    userId: string;
+}): Promise<{ title: string; content: string }[]> {
     try {
-        return await db.insert(agents).values({
-            name,
-            displayName,
-            description,
-            userId,
-            createdAt: new Date(),
-        });
-    } catch (error) {
-        console.error('Failed to save agent in database');
-        throw error;
+        const chunkRows = await db
+            .select({
+                sourceId: source.id,
+                sourceName: source.name,
+                chunkIndex: sourceChunk.chunkIndex,
+                content: sourceChunk.content,
+            })
+            .from(sourceChunk)
+            .innerJoin(source, eq(sourceChunk.sourceId, source.id))
+            .where(
+                and(
+                    eq(source.status, 'ready'),
+                    eq(source.userId, userId),
+                ),
+            )
+            .orderBy(asc(source.id), asc(sourceChunk.chunkIndex));
+
+        const bySource = new Map<string, { name: string; parts: string[] }>();
+        for (const row of chunkRows) {
+            const key = row.sourceId;
+            if (!bySource.has(key)) {
+                bySource.set(key, { name: row.sourceName, parts: [] });
+            }
+            bySource.get(key)!.parts.push(row.content);
+        }
+
+        return [...bySource.values()].map((v) => ({
+            title: v.name,
+            content: v.parts.join('\n\n'),
+        }));
+    } catch (_error) {
+        throw new Error('Failed to get ready sources');
     }
 }
 
-export async function getAgents({ userId }: { userId: string }): Promise<Agent[]> {
-    try {
-        return await db.select().from(agents).where(eq(agents.userId, userId));
-    } catch (error: any) {
-        console.log("Failed to fetch agents");
-        throw error;
-    }
-}
-
-export async function getAgentById({ id }: { id: string }): Promise<Agent | null> {
-    try {
-        const [selectedAgent] = await db.select().from(agents).where(eq(agents.id, id));
-        return selectedAgent ?? null;
-    } catch (error: any) {
-        console.log("Failed to fetch the agent");
-        throw error;
-    }
-}
-
-export async function updateAgentById({
-    id,
-    name,
-    displayName,
-    description,
+export async function getTopKChunksByEmbedding({
+    userId,
+    embedding,
+    topK = 5,
 }: {
-    id: string;
-    name: string;
-    displayName: string;
-    description: string;
-}) {
+    userId: string;
+    embedding: number[];
+    topK?: number;
+}): Promise<{ content: string; title: string }[]> {
     try {
-        return await db.update(agents).set({ name, displayName, description }).where(eq(agents.id, id));
+        const vectorLiteral = `[${embedding.join(',')}]`;
+
+        const rows = await db
+            .select({
+                content: sourceChunk.content,
+                title: source.name,
+                distance: sql<number>`${sourceChunk.embedding} <=> ${sql.raw(`'${vectorLiteral}'`)}::vector`,
+            })
+            .from(sourceChunk)
+            .innerJoin(source, eq(sourceChunk.sourceId, source.id))
+            .where(
+                and(
+                    eq(source.status, 'ready'),
+                    eq(source.userId, userId),
+                ),
+            )
+            .orderBy(
+                asc(sql`${sourceChunk.embedding} <=> ${sql.raw(`'${vectorLiteral}'`)}::vector`),
+            )
+            .limit(topK);
+
+        return rows.map((r) => ({ content: r.content, title: r.title }));
     } catch (error) {
-        console.error('Failed to update agent data in database');
-        throw error;
+        throw new Error('Failed to retrieve similar chunks');
     }
 }
 
-export async function deleteAgent({ id }: { id: string }) {
+export async function getSourcesForUser({
+    userId,
+    type,
+    limit = 50,
+}: {
+    userId: string;
+    type?: Source['type'];
+    limit?: number;
+}): Promise<Source[]> {
+    const conditions = [eq(source.userId, userId)];
+    if (type) {
+        conditions.push(eq(source.type, type));
+    }
     try {
-        return await db.delete(agents).where(eq(agents.id, id));
-    } catch (error: any) {
-        console.log("Failed to delete agent in database");
-        throw error;
+        return await db
+            .select()
+            .from(source)
+            .where(and(...conditions))
+            .orderBy(desc(source.createdAt))
+            .limit(limit);
+    } catch (_error) {
+        throw new Error('Failed to list sources');
+    }
+}
+
+export async function insertUserSource({
+    userId,
+    type,
+    name,
+    metadata,
+}: {
+    userId: string;
+    type: Source['type'];
+    name: string;
+    metadata: Record<string, unknown>;
+}): Promise<Source | null> {
+    try {
+        const [row] = await db
+            .insert(source)
+            .values({
+                userId,
+                type,
+                name,
+                status: 'pending',
+                metadata,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            })
+            .returning();
+        return row ?? null;
+    } catch (_error) {
+        throw new Error('Failed to insert source');
+    }
+}
+
+export async function deleteSourceForOwner({
+    sourceId,
+    userId,
+}: {
+    sourceId: string;
+    userId: string;
+}): Promise<boolean> {
+    try {
+        const match = await db
+            .select({ id: source.id })
+            .from(source)
+            .where(and(eq(source.id, sourceId), eq(source.userId, userId)))
+            .limit(1);
+        if (!match[0]) {
+            return false;
+        }
+        await db.delete(source).where(eq(source.id, sourceId));
+        return true;
+    } catch (_error) {
+        throw new Error('Failed to delete source');
+    }
+}
+
+export async function listSourcesForTraining({
+    userId,
+}: {
+    userId: string;
+}): Promise<Source[]> {
+    return db
+        .select()
+        .from(source)
+        .where(and(eq(source.userId, userId), ne(source.status, 'failed')))
+        .orderBy(asc(source.createdAt));
+}
+
+export async function deleteChunksForSource(sourceId: string) {
+    await db.delete(sourceChunk).where(eq(sourceChunk.sourceId, sourceId));
+}
+
+export async function insertSourceChunksBatch(
+    rows: {
+        sourceId: string;
+        content: string;
+        embedding: number[] | null;
+        chunkIndex: number;
+        metadata?: Record<string, unknown>;
+    }[],
+) {
+    const batchSize = 30;
+    for (let i = 0; i < rows.length; i += batchSize) {
+        const slice = rows.slice(i, i + batchSize);
+        await db.insert(sourceChunk).values(
+            slice.map((r) => ({
+                sourceId: r.sourceId,
+                content: r.content,
+                embedding: r.embedding ?? null,
+                chunkIndex: r.chunkIndex,
+                metadata: r.metadata ?? {},
+                createdAt: new Date(),
+            })),
+        );
+    }
+}
+
+export async function updateSourceStatus(
+    sourceId: string,
+    status: Source['status'],
+) {
+    await db
+        .update(source)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(source.id, sourceId));
+}
+
+/** Clears chunk embeddings and marks all sources for a user as pending (retrain needed). */
+export async function resetUserSourcesTraining(userId: string) {
+    const srcIds = await db.select({ id: source.id }).from(source).where(eq(source.userId, userId));
+    for (const { id } of srcIds) {
+        await db.delete(sourceChunk).where(eq(sourceChunk.sourceId, id));
+    }
+    if (srcIds.length > 0) {
+        await db
+            .update(source)
+            .set({ status: 'pending', updatedAt: new Date() })
+            .where(eq(source.userId, userId));
     }
 }

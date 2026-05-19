@@ -36,6 +36,41 @@
       "when": 1778613675146,
       "tag": "0004_gigantic_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778700000000,
+      "tag": "0005_ai_sources_pgvector",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778800000000,
+      "tag": "0006_agent_sources",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778900000000,
+      "tag": "0007_ai_sources_source_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1779000000000,
+      "tag": "0008_source_chunks",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778982672018,
+      "tag": "0009_square_nitro",
+      "breakpoints": true
     }
   ]
 }

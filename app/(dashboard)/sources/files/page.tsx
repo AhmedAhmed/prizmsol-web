@@ -1,9 +1,9 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import TextSourceForm from "./forms/text-source-form";
+import FileSourceForm from "../forms/file-source-form";
 
-export default async function SourcesTextPage() {
+export default async function SourcesFilesPage() {
     const session = await auth.api.getSession({
         headers: await headers(),
     });
@@ -12,8 +12,6 @@ export default async function SourcesTextPage() {
     }
 
     return (
-        <>
-            <TextSourceForm />
-        </>
+        <FileSourceForm />
     );
 }
