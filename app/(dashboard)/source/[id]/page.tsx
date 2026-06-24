@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import PageContent from "./page-content";
 
 export default async function SourceDetailPage({
     params,
@@ -37,10 +38,16 @@ export default async function SourceDetailPage({
     }
 
     const metadata = source.metadata as Record<string, unknown> | null;
+
+    const pages =
+        source.type === "website" && Array.isArray(metadata?.pages)
+            ? (metadata.pages as { url: string; title: string; content: string }[])
+            : [];
+
     const content =
         typeof metadata?.content === "string"
             ? metadata.content
-            : "No content available.";
+            : null;
 
     return (
         <div className="flex flex-col flex-1">
@@ -55,11 +62,21 @@ export default async function SourceDetailPage({
                     <span className="text-md font-bold">{source.name}</span>
                 </div>
             </PaneHeader>
-            <div className="flex flex-col flex-1">
-                <pre className="flex flex-col border rounded-md m-5 p-5 text-sm whitespace-pre-wrap font-sans overflow-auto">
-                    {content}
-                </pre>
-            </div>
+            {pages.length > 0 ? (
+                <PageContent pages={pages} />
+            ) : (
+                <div className="flex flex-col flex-1 p-5">
+                    {content ? (
+                        <pre className="flex flex-col border rounded-md p-5 text-sm whitespace-pre-wrap font-sans overflow-auto">
+                            {content}
+                        </pre>
+                    ) : (
+                        <div className="text-sm text-neutral-500 text-center py-8">
+                            No content available.
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

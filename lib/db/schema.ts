@@ -138,21 +138,6 @@ export const message = pgTable("messages", {
 
 export type DBMessage = InferSelectModel<typeof message>;
 
-export const Documents = pgTable("documents", {
-    id: uuid("id").primaryKey().notNull().defaultRandom(),
-    chatId: uuid("chatId")
-        .notNull()
-        .references(() => chat.id),
-    title: varchar("title").notNull(),
-    content: varchar("content").notNull(),
-    type: varchar("type", { enum: ["text", "image", "code", "speech", "sheet"] }).notNull(),
-    media: varchar("media").notNull(),
-    credit_cost: integer("credit_cost").notNull().default(0),
-    createdAt: timestamp("createdAt").notNull(),
-});
-
-export type Document = InferSelectModel<typeof Documents>;
-
 export const Likes = pgTable("likes", {
     id: uuid("id").primaryKey().notNull().defaultRandom(),
     messageId: uuid("messageId").notNull().references(() => message.id),

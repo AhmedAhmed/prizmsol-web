@@ -1,18 +1,13 @@
-import { ArtifactData } from "@/components/artifact";
 import { UIMessage } from "ai";
 import Message from "./message";
 
 function PureMessages({
-    artifactData,
     messages,
     status,
-    isToolbarOpen = false,
     isLoading,
 }: {
-    artifactData: Array<ArtifactData>;
     messages: Array<UIMessage>;
     status: "streaming" | "ready" | "error" | "submitted";
-    isToolbarOpen: boolean;
     isLoading: boolean;
 }) {
     
@@ -25,7 +20,6 @@ function PureMessages({
                     {messages.map((message, index) => (
                         <Message
                             key={message.id ?? index}
-                            artifactData={artifactData}
                             message={message}
                             isLoading={isLoading}
                             status={status}

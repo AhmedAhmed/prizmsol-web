@@ -63,7 +63,7 @@ export default function PricingTable(props: { compact?: boolean, user: any }) {
         isCancelable: plan !== "Free",
         features: [
           `$${PLAN_CREDIT_USD_DEFAULT.free} of AI usage per month`,
-          "Image search and documents",
+          "Image search",
         ],
       },
       {

@@ -28,15 +28,26 @@ export default function SourceSidebar({
     const handleTrain = async () => {
         setIsTraining(true);
         const formData = new FormData();
-        const response = await trainSourcesAction(formData);
+
+        const promise = trainSourcesAction(formData);
+
+        toast.promise(promise, {
+            loading: "Crawling pages, chunking content, and generating embeddings\u2026",
+            success: (response) => {
+                if (response.status !== 200 || !response.data) {
+                    throw new Error(response.error ?? "Training failed");
+                }
+                return `Trained ${response.data.trained} source${response.data.trained !== 1 ? "s" : ""} (${response.data.totalChunks} chunks)`;
+            },
+            error: (err) => err.message ?? "Training failed",
+        });
+
+        const response = await promise;
         setIsTraining(false);
 
         if (response.status === 200) {
-            toast.success("Sources trained successfully");
             setSources(sources.map(s => s.status === "ready" ? s : { ...s, status: "processing" as const }));
             router.refresh();
-        } else {
-            toast.error(response.error ?? "Training failed");
         }
     };
 

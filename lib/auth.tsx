@@ -18,6 +18,8 @@ export const auth = betterAuth({
     schema,
   }),
 
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+
   verification: {
     // This ensures identifiers (like email) are stored in plain text for lookup.
     storeIdentifier: "plain",

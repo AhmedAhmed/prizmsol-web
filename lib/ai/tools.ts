@@ -1,78 +1,7 @@
 import { gateway } from "@ai-sdk/gateway";
-import { tool as createTool, generateText, UIMessageStreamWriter } from "ai";
-import { v4 as uuid } from 'uuid';
+import { tool as createTool, generateText } from "ai";
 import { z } from "zod";
-import { documentHandlersByArtifactKind } from "./artifacts/server";
 import { websearch_prompt } from "./prompts";
-
-export const createDocumentTool = ({ dataStream, chatId }: {
-    dataStream: UIMessageStreamWriter;
-    chatId: string;
-}) => createTool({
-    description: "Create an artifact. You MUST specify kind: use 'code' for any programming/algorithm request (creates a script), 'text' for essays/writing (creates a document), 'sheet' for spreadsheets/data.",
-    inputSchema: z.object({
-        kind: z.string().describe("The kind of document to create. Options: text, code, sheet"),
-        title: z.string().describe("The title of the document. Include an emoji at the beginning. Maximum 25 characters"),
-        prompt: z.string().describe("The precise prompt to use for generating a document"),
-    }),
-    execute: async ({ prompt, kind, title }) => {
-        const id = uuid();
-
-        dataStream.write({
-            type: 'data-title',
-            data: title,
-        });
-
-        dataStream.write({
-            type: 'data-prompt',
-            data: prompt,
-        });
-
-        dataStream.write({
-            type: 'data-kind',
-            data: kind,
-        });
-
-        dataStream.write({
-            type: 'data-clear',
-            data: '',
-        });
-
-        // stream data to artifact.
-        const documentHandler = documentHandlersByArtifactKind.find(
-            (documentHandlerByArtifactKind) =>
-                documentHandlerByArtifactKind.kind === kind,
-        );
-
-        if (!documentHandler) {
-            throw new Error(`No document handler found for kind: ${kind}`);
-        }
-
-        await documentHandler.onCreateDocument({
-            id,
-            chatId: chatId,
-            title: title,
-            prompt: prompt,
-            session: "0",
-            dataStream: dataStream,
-        });
-
-        // end
-        dataStream.write({
-            type: 'data-finish',
-            data: '',
-        });
-
-
-        return {
-            id,
-            kind: kind,
-            title: title,
-            prompt: prompt,
-            content: "A document was been created and is now visible to the user.",
-        };
-    }
-});
 
 export const imageTool = createTool({
     description: "Create an image based on the prompt",
@@ -129,6 +58,5 @@ export const webSearchTool = createTool({
 });
 
 export const tools = {
-    createDocumentTool,
     webSearchTool,
 };

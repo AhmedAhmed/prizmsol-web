@@ -13,7 +13,7 @@ const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
     title: "PrizmSol",
-    description: "Prizmsol is an answer engine that provides users with upto date answers to questions, creates documents and helps with code.",
+    description: "Prizmsol is an answer engine that provides users with up-to-date answers to questions and helps with code.",
 };
 
 export default async function RootLayout({

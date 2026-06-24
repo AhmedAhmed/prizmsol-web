@@ -1,29 +1,29 @@
 "use client";
 import SubmitButton from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { isEmpty } from "lodash";
+import { GlobeIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { addSourceAction } from "../actions";
 
-export default function TextSourceForm() {
+export default function WebsiteSourceForm() {
     const [title, setTitle] = useState<string>("");
-    const [content, setContent] = useState<string>("");
+    const [url, setUrl] = useState<string>("");
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!title.trim() || !content.trim()) return;
+        if (!title.trim() || !url.trim()) return;
 
         setIsSubmitting(true);
         const formData = new FormData(e.currentTarget);
         try {
             const response = await addSourceAction(formData);
             if (response.status === 200) {
-                toast.success("Source added successfully");
+                toast.success("Website source added");
                 setTitle("");
-                setContent("");
+                setUrl("");
             } else if (!isEmpty(response.errors)) {
                 for (const err of response.errors) {
                     if (err) toast.error(err);
@@ -38,8 +38,8 @@ export default function TextSourceForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-1 flex-col h-full gap-4">
-            <Input type="hidden" name="type" value="text" />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Input type="hidden" name="type" value="website" />
             <div className="flex flex-col gap-2">
                 <Input
                     type="text"
@@ -50,17 +50,24 @@ export default function TextSourceForm() {
                     onChange={(e) => setTitle(e.target.value)}
                 />
             </div>
-            <div className="flex flex-col flex-1 gap-2">
-                <Textarea
-                    name="content"
-                    value={content}
-                    className="field-sizing-content flex-1 bg-transparent dark:bg-transparent text-sm placeholder:text-muted-foreground p-3 w-full min-h-[80px] max-h-[500px] resize-none border rounded-md"
-                    placeholder="Paste your content here..."
-                    onChange={(e) => setContent(e.target.value)}
-                />
+            <div className="flex flex-col gap-2">
+                <div className="relative">
+                    <GlobeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                    <Input
+                        type="url"
+                        name="url"
+                        value={url}
+                        className="rounded-sm bg-transparent dark:bg-transparent pl-10"
+                        placeholder="https://example.com"
+                        onChange={(e) => setUrl(e.target.value)}
+                    />
+                </div>
+                <p className="text-xs text-neutral-500">
+                    We&apos;ll crawl same-domain pages up to 2 levels deep (max 25 pages).
+                </p>
             </div>
             <div className="flex justify-end">
-                <SubmitButton text="Add Text Source" disabled={!title.trim() || !content.trim() || isSubmitting} />
+                <SubmitButton text="Add Website Source" disabled={!title.trim() || !url.trim() || isSubmitting} />
             </div>
         </form>
     );

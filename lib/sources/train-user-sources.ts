@@ -3,6 +3,7 @@ import 'server-only';
 import { createOpenAI } from '@ai-sdk/openai';
 import { embedMany } from 'ai';
 import type { Source } from '@/lib/db/schema';
+import type { CrawledPage } from '@/lib/sources/crawl-website';
 import {
     deleteChunksForSource,
     getUserById,
@@ -10,9 +11,11 @@ import {
     incrementUserAiCreditUsage,
     insertSourceChunksBatch,
     listSourcesForTraining,
+    updateSourceMetadata,
     updateSourceStatus,
 } from '@/lib/db/queries';
 import { chunkText } from '@/lib/sources/chunk-text';
+import { crawlWebsite } from '@/lib/sources/crawl-website';
 import { extractTextFromRemoteFile } from '@/lib/sources/parse-remote-file';
 import { getCreditLimitCents, getCurrentUsageWindow } from '@/lib/stripe/billing';
 
@@ -53,11 +56,9 @@ async function resolveSourcePlainText(src: Source): Promise<string> {
     }
 
     if (src.type === 'website') {
-        const url = getMetadataFileUrl(src.metadata) ?? getMetadataUrl(src.metadata);
-        if (url?.startsWith('http')) {
-            const { text } = await extractTextFromRemoteFile(url);
-            return text;
-        }
+        const url = getMetadataUrl(src.metadata);
+        if (!url?.startsWith('http')) throw new Error('Website source missing URL');
+        throw new Error('Website content not pre-resolved');
     }
 
     throw new Error(`No indexable content for source ${src.id}`);
@@ -73,7 +74,7 @@ function calculateEmbeddingCostCents(totalTokens: number): number {
 }
 
 export type TrainUserSourcesResult =
-    | { ok: true; trained: number }
+    | { ok: true; trained: number; totalChunks: number }
     | { ok: false; error: string };
 
 export async function trainUserSources({
@@ -102,14 +103,41 @@ export async function trainUserSources({
     });
     const currentLimitCents = getCreditLimitCents((selectedUser.plan ?? 'free') as 'free' | 'pro' | 'max');
 
-    let estimatedTotalTokens = 0;
+    interface ResolvedContent {
+        text: string;
+        pages?: CrawledPage[];
+    }
+
+    const resolved = new Map<string, ResolvedContent>();
     for (const src of sources) {
         try {
+            if (src.type === 'website') {
+                const url = getMetadataUrl(src.metadata);
+                if (url?.startsWith('http')) {
+                    const pages = await crawlWebsite(url, { maxDepth: 2, maxPages: 25 });
+                    if (pages.length > 0) {
+                        const text = pages
+                            .map((p) => `[${p.title}](${p.url})\n${p.text}`)
+                            .join('\n\n---\n\n');
+                        resolved.set(src.id, { text, pages });
+                        continue;
+                    }
+                }
+            }
             const plain = await resolveSourcePlainText(src);
-            estimatedTotalTokens += estimateEmbeddingTokens(plain);
+            resolved.set(src.id, { text: plain });
         } catch (e) {
-            console.warn('Could not resolve source text for estimation', src.id, e);
+            console.warn('Could not resolve source text', src.id, e);
         }
+    }
+
+    if (resolved.size === 0) {
+        return { ok: false, error: 'Could not resolve any source content.' };
+    }
+
+    let estimatedTotalTokens = 0;
+    for (const { text } of resolved.values()) {
+        estimatedTotalTokens += estimateEmbeddingTokens(text);
     }
 
     const estimatedCostCents = calculateEmbeddingCostCents(estimatedTotalTokens);
@@ -120,19 +148,27 @@ export async function trainUserSources({
     }
 
     let trained = 0;
+    let totalChunks = 0;
     let totalCostCents = 0;
 
     for (const src of sources) {
+        const entry = resolved.get(src.id);
+        if (!entry) {
+            await updateSourceStatus(src.id, 'failed');
+            continue;
+        }
+
         try {
             await updateSourceStatus(src.id, 'processing');
             await deleteChunksForSource(src.id);
 
-            const plain = await resolveSourcePlainText(src);
-            const parts = chunkText(plain);
+            const parts = chunkText(entry.text);
             if (parts.length === 0) {
                 await updateSourceStatus(src.id, 'failed');
                 continue;
             }
+
+            totalChunks += parts.length;
 
             const { embeddings } = await embedMany({
                 model: EMBED_MODEL,
@@ -149,7 +185,19 @@ export async function trainUserSources({
                 })),
             );
 
-            const sourceTokens = estimateEmbeddingTokens(plain);
+            if (src.type === 'website' && entry.pages) {
+                await updateSourceMetadata(src.id, {
+                    ...(src.metadata as Record<string, unknown>),
+                    pages: entry.pages.map((p) => ({
+                        url: p.url,
+                        title: p.title,
+                        content: p.text,
+                    })),
+                    characterCount: entry.text.length,
+                });
+            }
+
+            const sourceTokens = estimateEmbeddingTokens(entry.text);
             const sourceCostCents = calculateEmbeddingCostCents(sourceTokens);
             totalCostCents += sourceCostCents;
 
@@ -168,5 +216,5 @@ export async function trainUserSources({
         });
     }
 
-    return { ok: true, trained };
+    return { ok: true, trained, totalChunks };
 }

@@ -2,7 +2,7 @@ import 'server-only';
 
 import { and, asc, count, desc, eq, gte, inArray, lte, ne, sql } from 'drizzle-orm';
 import { db } from './drizzle';
-import { aiCreditUsageEvent, chat, DBMessage, Documents, Likes, message, portfolio, source, Source, sourceChunk, user, User } from './schema';
+import { aiCreditUsageEvent, chat, DBMessage, Likes, message, portfolio, source, Source, sourceChunk, user, User } from './schema';
 
 export async function getUser(email: string): Promise<User[]> {
     try {
@@ -382,52 +382,8 @@ export async function updateChatTitleById({
     }
 }
 
-export async function saveDocument({
-    id,
-    chatId,
-    title,
-    content,
-    type,
-    media,
-}: {
-    id: string;
-    chatId: string;
-    content: string;
-    title: string;
-    type: 'text' | 'image' | 'code' | 'speech' | 'sheet';
-    media: string;
-}) {
-    try {
-        return await db.insert(Documents).values({
-            id,
-            chatId,
-            content,
-            title,
-            type,
-            media,
-            createdAt: new Date(),
-        });
-    } catch (error) {
-        console.error('Failed to save document in database');
-        throw error;
-    }
-}
-export async function getDocumentsByChatId({
-    chatId,
-}: {
-    chatId: string;
-}) {
-    try {
-        return await db
-            .select()
-            .from(Documents)
-            .where(eq(Documents.chatId, chatId))
-            .orderBy(asc(Documents.createdAt));
-    } catch (error) {
-        console.error('Failed to get document by message id from database');
-        throw error;
-    }
-}
+
+
 
 // get count of messages sent this month by user from all chats.
 export async function getMessagesCountByUserId(): Promise<number> {
@@ -853,6 +809,16 @@ export async function updateSourceStatus(
     await db
         .update(source)
         .set({ status, updatedAt: new Date() })
+        .where(eq(source.id, sourceId));
+}
+
+export async function updateSourceMetadata(
+    sourceId: string,
+    metadata: Record<string, unknown>,
+) {
+    await db
+        .update(source)
+        .set({ metadata, updatedAt: new Date() })
         .where(eq(source.id, sourceId));
 }
 

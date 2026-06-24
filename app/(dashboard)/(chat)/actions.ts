@@ -12,7 +12,7 @@ import { v4 as uuid } from "uuid";
 
 export async function generateTitleFromUserMessage(message: string) {
     const { text: title } = await generateText({
-        model: gateway("google/gemini-2.5-flash"),
+        model: gateway("moonshotai/kimi-k2.5"),
         system: title_prompt,
         prompt: message,
     });

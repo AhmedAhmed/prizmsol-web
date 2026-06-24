@@ -17,7 +17,12 @@ const TextFormValidationSchema = z.object({
     content: z.string().min(1),
 });
 
-const sourceTypeSchema = z.enum(["text", "file"]);
+const WebsiteFormValidationSchema = z.object({
+    title: z.string().min(1).max(100),
+    url: z.string().url(),
+});
+
+const sourceTypeSchema = z.enum(["text", "file", "website"]);
 
 async function requireUserId(): Promise<string | null> {
     const session = await auth.api.getSession({
@@ -42,30 +47,35 @@ export async function addSourceAction(formData: FormData) {
     const content = formData.get("content") as string;
     const fileUrl = (formData.get("file") as string) || "";
 
-    const formValidation = TextFormValidationSchema.safeParse({
-        title,
-        content,
-    });
+    let name: string;
+    let body: string;
 
-    if (!formValidation.success) {
-        const titleErrors = get(formValidation.error.flatten(), "fieldErrors.title.[0]", "");
-        const contentErrors = get(formValidation.error.flatten(), "fieldErrors.content.[0]", "");
-        const errs: string[] = [];
-        if (titleErrors) {
-            errs.push(String(titleErrors));
+    if (type === "website") {
+        const url = formData.get("url") as string;
+        const websiteValidation = WebsiteFormValidationSchema.safeParse({ title, url });
+        if (!websiteValidation.success) {
+            const titleErrors = get(websiteValidation.error.flatten(), "fieldErrors.title.[0]", "");
+            const urlErrors = get(websiteValidation.error.flatten(), "fieldErrors.url.[0]", "");
+            const errs: string[] = [];
+            if (titleErrors) errs.push(String(titleErrors));
+            if (urlErrors) errs.push(String(urlErrors));
+            return { status: 400, data: null, errors: errs };
         }
-        if (contentErrors) {
-            errs.push(String(contentErrors));
+        name = websiteValidation.data.title;
+        body = websiteValidation.data.url;
+    } else {
+        const formValidation = TextFormValidationSchema.safeParse({ title, content });
+        if (!formValidation.success) {
+            const titleErrors = get(formValidation.error.flatten(), "fieldErrors.title.[0]", "");
+            const contentErrors = get(formValidation.error.flatten(), "fieldErrors.content.[0]", "");
+            const errs: string[] = [];
+            if (titleErrors) errs.push(String(titleErrors));
+            if (contentErrors) errs.push(String(contentErrors));
+            return { status: 400, data: null, errors: errs };
         }
-        return {
-            status: 400,
-            data: null,
-            errors: errs,
-        };
+        name = formValidation.data.title;
+        body = formValidation.data.content;
     }
-
-    const name = formValidation.data.title;
-    const body = formValidation.data.content;
 
     let metadata: Record<string, unknown>;
     if (type === "file") {
@@ -86,6 +96,11 @@ export async function addSourceAction(formData: FormData) {
                     return "";
                 }
             })(),
+        };
+    } else if (type === "website") {
+        metadata = {
+            url: body,
+            characterCount: 0,
         };
     } else {
         metadata = {
@@ -148,7 +163,7 @@ export async function deleteSourceAction(formData: FormData) {
 
 export async function trainSourcesAction(formData: FormData): Promise<{
     status: number;
-    data: null;
+    data: { trained: number; totalChunks: number } | null;
     error?: string;
 }> {
     const userId = await requireUserId();
@@ -162,5 +177,5 @@ export async function trainSourcesAction(formData: FormData): Promise<{
     }
 
     revalidatePath("/sources", "layout");
-    return { status: 200, data: null };
+    return { status: 200, data: { trained: result.trained, totalChunks: result.totalChunks } };
 }

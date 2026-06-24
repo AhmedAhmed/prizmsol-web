@@ -1,27 +1,21 @@
-import { ArtifactData } from "@/components/artifact";
 import { ChatReasoning } from "@/components/chat/chat-reasoning";
 import { Markdown } from "@/components/markdown";
-import { Button } from "@/components/ui/button";
-import { useArtifact } from "@/hooks/use-artifact";
 import { cn } from "@/lib/utils";
 import { UIMessage as Msg } from "ai";
-import { CodeIcon, FileTextIcon, GlobeIcon, Loader2Icon, LoaderIcon, TableIcon } from "lucide-react";
+import { GlobeIcon, Loader2Icon, LoaderIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Message({
-    artifactData,
     message,
     isLoading,
     status
 }: {
-    artifactData: Array<ArtifactData>;
     message: Msg;
     isLoading: boolean;
     status: "streaming" | "ready" | "error" | "submitted";
 }) {
-    const { setArtifact, artifact } = useArtifact();
     const router = useRouter();
 
     useEffect(() => {
@@ -29,20 +23,6 @@ export default function Message({
             router.refresh();
         }
     }, [status]);
-
-    const handleArtifactClick = (documentId: string) => () => {
-        const currentArtifact: ArtifactData = artifactData.find(artifact => artifact.id == documentId) as ArtifactData || [];
-
-        setArtifact({
-            ...artifact,
-            kind: currentArtifact.type,
-            documentId: currentArtifact.id,
-            title: currentArtifact.title,
-            images: currentArtifact.images || [],
-            content: currentArtifact.content,
-            isVisible: true,
-        });
-    }
 
     const isToolPart = (part: any) =>
         part?.type === "tool-invocation" || (typeof part?.type === "string" && part.type.startsWith("tool-"));
@@ -109,27 +89,6 @@ export default function Message({
                             const state = getToolState(part);
 
                             if (state == "call" || state == "input-available" || state == "input-streaming") {
-                                if (toolName == "createDocumentTool") {
-                                    return (
-                                        <Button
-                                            variant="outline"
-                                            key={index}
-                                            className="h-auto justify-start gap-2.5 self-start mb-2.5"
-                                            onClick={handleArtifactClick(args?.id)}
-                                        >
-                                            <div className="mt-0.5 self-start text-sm font-semibold text-muted-foreground">
-                                                {args.kind == "code" && <CodeIcon className="h-5 w-5" />}
-                                                {args.kind == "text" && <FileTextIcon className="h-5 w-5" />}
-                                                {args.kind == "sheet" && <TableIcon className="h-5 w-5" />}
-                                            </div>
-                                            <div className="flex flex-1 self-start flex-col gap-1">
-                                                <span className="text-sm text-muted-foreground text-start text-balance line-clamp-2">
-                                                    {artifact.status == "streaming" ? `Creating "${args.title}"` || "Creating document" : `Created "${args.title}"` || "Created document"}
-                                                </span>
-                                            </div>
-                                        </Button>                                    );
-                                }
-
                                 if (toolName == "webSearchTool") {
                                     return (
                                         <div key={index} className="flex items-center gap-2.5">
@@ -163,29 +122,6 @@ export default function Message({
                             if (state == "result" || state == "output-available") {
                                 const result = getToolResult(part);
 
-                                if (toolName == "createDocumentTool") {
-                                    return isLoading ? (
-                                        <div key={index} className="flex h-[36px] w-[250px] rounded-md bg-neutral-200 dark:bg-neutral-700 animate-pulse"></div>
-                                    ) : (
-                                        <Button
-                                            variant="outline"
-                                            key={index}
-                                            className="h-auto justify-start gap-2.5 self-start mb-2.5"
-                                            onClick={handleArtifactClick(result.id)}
-                                        >
-                                            <div className="mt-0.5 self-start text-sm font-semibold text-muted-foreground">
-                                                {args.kind == "code" && <CodeIcon className="h-5 w-5" />}
-                                                {args.kind == "text" && <FileTextIcon className="h-5 w-5" />}
-                                                {args.kind == "sheet" && <TableIcon className="h-5 w-5" />}
-                                            </div>
-                                            <div className="flex flex-1 self-start flex-col gap-1">
-                                                <span className="text-sm text-muted-foreground text-start text-balance line-clamp-2">
-                                                    {artifact.status == "streaming" ? `Creating "${args.title}"` || "Creating document" : `Created "${args.title}"` || "Created document"}
-                                                </span>
-                                            </div>
-                                        </Button>
-                                    );
-                                }
                                 if (toolName == "imageTool") {
                                     return (
                                         <div key={index} className="flex flex-col relative w-[500px] h-[500px] rounded-lg overflow-hidden">

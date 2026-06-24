@@ -1,6 +1,6 @@
 import { generateTitleFromUserMessage } from '@/app/(dashboard)/(chat)/actions';
 import { buildChatResearchSystemPrompt } from '@/lib/ai/prompts';
-import { createDocumentTool, webSearchTool } from '@/lib/ai/tools';
+import { webSearchTool } from '@/lib/ai/tools';
 import { auth } from '@/lib/auth';
 import { isProductionEnvironment } from '@/lib/constants';
 import {
@@ -181,7 +181,6 @@ export async function POST(req: Request) {
           experimental_transform: smoothStream({ chunking: 'word' }),
           tools: {
             webSearchTool,
-            createDocumentTool: createDocumentTool({ dataStream, chatId }),
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

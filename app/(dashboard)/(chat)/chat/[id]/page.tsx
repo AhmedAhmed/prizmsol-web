@@ -1,5 +1,4 @@
 import NotFound from "@/app/not-found";
-import { DataStreamHandler } from "@/components/data-stream-handler";
 import { getChatById, getMessagesByChatId, getMessagesCountByUserId } from "@/lib/db/queries";
 import { UIMessage } from "ai";
 import Chat from "./chat";
@@ -27,7 +26,6 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
                 project={chat}
                 messagesCount={count}
             />
-            <DataStreamHandler id={chat?.id} />
         </>
     );
 }

@@ -1,10 +1,8 @@
 "use client";
-import { ChevronsLeftIcon, MoreHorizontalIcon, PencilIcon, TrashIcon } from "lucide-react";
+import { MoreHorizontalIcon, PencilIcon, TrashIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useArtifact } from "@/hooks/use-artifact";
-import isEmpty from "lodash/isEmpty";
 import { useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import DeleteDialog from "../delete-dialog";
@@ -19,14 +17,6 @@ export default function SidebarTitle({
 }) {
     const [editOpen, setEditOpen] = useState(false);
     const [open, setOpen] = useState(false);
-    const { artifact, setArtifact } = useArtifact();
-
-    const handleToggleArtifact = () => {
-        setArtifact({
-            ...artifact,
-            isVisible: !artifact.isVisible,
-        });
-    }
 
     return (
         <>
@@ -59,14 +49,6 @@ export default function SidebarTitle({
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        {!artifact.isVisible && !isEmpty(artifact.content) && <Button
-                            variant="ghost"
-                            size="icon"
-                            className="p-1.5 h-auto w-auto"
-                            onClick={handleToggleArtifact}
-                        >
-                            <ChevronsLeftIcon size={30} />
-                        </Button>}
                     </div>
                 </div>
             </div>
