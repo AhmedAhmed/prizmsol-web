@@ -10,11 +10,11 @@ function PureMessages({
     status: "streaming" | "ready" | "error" | "submitted";
     isLoading: boolean;
 }) {
-    
+
     return (
         <>
             <div
-                className="flex flex-col justify-start items-center mx-auto px-5 w-full h-full overflow-hidden overflow-y-auto" 
+                className="flex flex-col justify-start items-center mx-auto px-5 w-full h-full overflow-hidden overflow-y-auto"
             >
                 <div className="flex flex-col relative mx-auto gap-10 mt-5 w-full max-w-3xl h-full">
                     {messages.map((message, index) => (

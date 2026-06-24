@@ -140,6 +140,7 @@ export default function Chat({
                             <Messages
                                 messages={messages}
                                 status={status}
+                                isLoading={false}
                             />
                         </div>
                     </div>
