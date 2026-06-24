@@ -154,10 +154,6 @@ export default function PromptInput({
                 return
             }
             formRef.current?.requestSubmit()
-            if (clearOnSubmit) {
-                setPrompt("")
-                handleInputChange?.("")
-            }
         }
     }
 
@@ -183,11 +179,16 @@ export default function PromptInput({
         return chipTexts ? `${chipTexts}\n\n${prompt}`.trim() : prompt
     }
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        if (await canSend()) { setUpgradeDialogOpen(true); return }
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
         if (onSubmit) onSubmit(e)
+        canSend().then((overLimit) => {
+            if (overLimit) setUpgradeDialogOpen(true)
+        })
         if (clearOnSubmit) {
             setPastedChips([])
+            setPrompt("")
+            handleInputChange?.("")
         }
     }
 

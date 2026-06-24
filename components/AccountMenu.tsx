@@ -26,9 +26,10 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { signOut } from "next-auth/react";
+import { signOut } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { ModeToggle } from "./ui/mode-toggle";
@@ -60,9 +61,12 @@ export default function AccountMenu({
         }
     }
 
+    const router = useRouter();
+
     const handleLogout = async () => {
-        signOut();
+        await signOut();
         toast.success("You have been logged out successfully");
+        router.push("/login");
     }
 
     const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
